@@ -73,8 +73,8 @@ export default function ControlPanel() {
     setTimeout(() => setShowSaveToast(false), 3000);
   };
 
-  const btn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-black hover:text-[#007AFF] transition-colors border border-gray-100 active:scale-90";
-  const activBtn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-[#007AFF] text-white shadow-[0_4px_12px_rgba(0,122,255,0.3)] transition-colors border border-[#007AFF] active:scale-90";
+  const btn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-black hover:text-[#007AFF] transition-colors border border-gray-100 active:scale-90 shrink-0";
+  const activBtn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-[#007AFF] text-white shadow-[0_4px_12px_rgba(0,122,255,0.3)] transition-colors border border-[#007AFF] active:scale-90 shrink-0";
   const touchStyle = { touchAction: 'manipulation' as const };
   const iconSize = 16;
 
@@ -108,7 +108,10 @@ export default function ControlPanel() {
         </AnimatePresence>
 
         {/* Main pill */}
-        <div className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-center overflow-x-auto">
+        <div 
+          className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          style={{ justifyContent: 'safe center' }}
+        >
           {/* NNS */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleNNS}
             className={isNNSActive ? activBtn : btn} title="Nashville Number System">
