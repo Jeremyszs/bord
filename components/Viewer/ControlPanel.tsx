@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewerStore } from '@/store/viewerStore';
-import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { useMidiStore } from '@/store/midiStore';
+import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano } from 'lucide-react';
 import Slider from '@/components/UI/Slider';
 
 export default function ControlPanel() {
@@ -23,6 +24,8 @@ export default function ControlPanel() {
     clearSongs,
     syncWithDb,
   } = useViewerStore();
+
+  const { isMidiEnabled, toggleMidi } = useMidiStore();
 
   const [showSaveToast, setShowSaveToast] = React.useState(false);
   const [showScrollSlider, setShowScrollSlider] = useState(false);
@@ -112,6 +115,12 @@ export default function ControlPanel() {
           className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           style={{ justifyContent: 'safe center' }}
         >
+          {/* MIDI */}
+          <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleMidi}
+            className={isMidiEnabled ? activBtn : btn} title="MIDI Detector">
+            <Piano size={iconSize} />
+          </motion.button>
+
           {/* NNS */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleNNS}
             className={isNNSActive ? activBtn : btn} title="Nashville Number System">

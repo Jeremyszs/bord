@@ -14,9 +14,43 @@ function isChordLine(line: string): boolean {
   return tokens.length > 0 && tokens.every(t => isChord(t));
 }
 
+const FLAT_TO_SHARP_EXPORT: Record<string, string> = {
+  Db: 'C#', Eb: 'D#', Fb: 'E', Gb: 'F#', Ab: 'G#', Bb: 'A#', Cb: 'B',
+};
+const CHROMATIC_EXPORT = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const FLAT_PREF_EXPORT = new Set(['F','Bb','Eb','Ab','Db','Gb']);
+const SHARP_TO_FLAT_EXPORT: Record<string, string> = {
+  'C#':'Db','D#':'Eb','F#':'Gb','G#':'Ab','A#':'Bb',
+};
+
+/** Returns the key after applying transposeSteps, with flat spelling preference */
+function getExportCurrentKey(song: SonglistItem): string | null {
+  if (!song.originalKey) return null;
+  const norm = FLAT_TO_SHARP_EXPORT[song.originalKey] ?? song.originalKey;
+  const idx = CHROMATIC_EXPORT.indexOf(norm);
+  if (idx === -1) return song.originalKey;
+  const newIdx = (idx + song.transposeSteps + 1200) % 12;
+  const raw = CHROMATIC_EXPORT[newIdx];
+  const flat = SHARP_TO_FLAT_EXPORT[raw];
+  if (flat) {
+    const origWasFlat = song.originalKey in FLAT_TO_SHARP_EXPORT || FLAT_PREF_EXPORT.has(song.originalKey);
+    if (origWasFlat || FLAT_PREF_EXPORT.has(flat)) return flat;
+  }
+  return raw;
+}
+
+// BUG FIX #8: NNS export must use the post-transpose key as tonic
 function displayChord(raw: string, song: SonglistItem, isNNS: boolean): string {
   if (!raw) return '';
-  if (isNNS && song.originalKey) return convertToNNS(raw, song.originalKey);
+  if (isNNS) {
+    const currentKey = getExportCurrentKey(song);
+    if (currentKey) {
+      const transposed = song.transposeSteps !== 0
+        ? transposeChord(raw, song.transposeSteps)
+        : raw;
+      return convertToNNS(transposed, currentKey);
+    }
+  }
   if (song.transposeSteps !== 0) return transposeChord(raw, song.transposeSteps);
   return raw;
 }

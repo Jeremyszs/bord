@@ -6,6 +6,8 @@ import ChordSheetRender from '@/components/Viewer/ChordSheetRender';
 import ControlPanel from '@/components/Viewer/ControlPanel';
 import ScrollController from '@/components/Viewer/ScrollController';
 import CanvasNotation from '@/components/Viewer/CanvasNotation';
+import MidiPianoWindow from '@/components/Viewer/MidiPianoWindow';
+import { useMidiProcessor } from '@/hooks/useMidiProcessor';
 import { Plus, Search, Loader2, Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -15,6 +17,9 @@ export default function ViewerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Activate MIDI listener (attaches/detaches automatically based on store state)
+  useMidiProcessor();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -138,6 +143,7 @@ export default function ViewerPage() {
       </main>
 
       <ControlPanel />
+      <MidiPianoWindow />
     </div>
   );
 }

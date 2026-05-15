@@ -125,8 +125,16 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
 
   function displayChord(raw: string): string {
     if (!raw) return '';
-    if (isNNSActive && song?.originalKey) {
-      return convertToNNS(raw, song.originalKey);
+    const currentKey = getCurrentKey(song);
+    // BUG FIX #5: NNS must use the *current* (post-transpose) key as the tonic,
+    // not the originalKey. E.g. if song is in G and transposed +2 → A, NNS "1"
+    // must map to A, not G.
+    if (isNNSActive && currentKey) {
+      // First transpose the raw chord to the current key, then convert to NNS
+      const transposed = song.transposeSteps !== 0
+        ? transposeChord(raw, song.transposeSteps)
+        : raw;
+      return convertToNNS(transposed, currentKey);
     }
     if (song.transposeSteps !== 0) {
       return transposeChord(raw, song.transposeSteps);

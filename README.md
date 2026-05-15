@@ -1,52 +1,72 @@
-# Bord — Chord Sheets for Worship Musicians
+# Bord
 
-**Bord** is an offline-first chord sheet application built for worship musicians. Search any song on JrChord.com, transpose to any key, use Nashville Number System notation, annotate with free-draw, and organize setlists — all stored locally in your browser.
+**Bord** is a production-ready, offline-first Next.js web application built specifically for worship musicians. It provides a premium, highly functional tool to search, transpose, annotate, and organize chord sheets without requiring cloud accounts or an active internet connection after the initial fetch.
 
-## Features
+## ✨ Key Features
 
-- 🔍 **Song Search** — Live search from JrChord.com
-- 🎵 **Transposition** — Per-song semitone transpose with real key display (Bb, not A#)
-- 🔢 **Nashville Number System** — Global NNS toggle with correct flat key support
-- 📝 **Annotations** — Free-draw canvas overlay (Fabric.js) with undo
-- ⏩ **Auto-Scroll** — Smooth velocity-based scrolling for hands-free reading
-- 📚 **Local Library** — Persistent setlist storage via IndexedDB (Dexie)
-- 📤 **Export** — `.bord` JSON bundles and PDF chord sheets
-- 📥 **Import** — Open `.bord` files to restore setlists across devices
-- 🗂️ **Setlist Management** — Multi-song setlists with drag-free reordering
-- 📱 **Responsive** — Works on mobile, tablet, and desktop
+- **High-Speed Song Search & Scraping**: Instantly search and scrape chord sheets directly from JrChord.com.
+- **Offline-First Library**: Save setlists locally to your browser using IndexedDB. Access your music anywhere, anytime, even without an internet connection.
+- **Advanced Music Engine**:
+  - **Transposition**: Shift the key of any song up or down seamlessly.
+  - **Nashville Number System (NNS)**: Instantly convert chords to NNS based on the song's current transposed key.
+- **MIDI Controller Integration**: 
+  - Connect your hardware MIDI controller via the Web MIDI API.
+  - Features a floating, resizable 88-key visual piano window.
+  - Real-time chord detection (powered by Tonal.js) on all 128 MIDI notes with zero-latency visual feedback.
+  - Includes a clickable virtual keyboard for testing without hardware.
+- **Canvas Annotations**: Draw directly on your chord sheets using a built-in Fabric.js canvas overlay. Annotations are saved locally with your setlist.
+- **PDF Export**: Export your setlists to clean, stylized PDF documents (using jsPDF & html2canvas) for printing or sharing.
+- **Auto-Scroll**: Hands-free scrolling with adjustable speed controls.
+- **Premium UI/UX**: Built with Tailwind CSS, featuring glassmorphism, responsive design, and smooth interactions optimized for both desktop and mobile devices.
 
-## Tech Stack
+## 🛠️ Technology Stack
 
-Next.js 16 · TypeScript · Tailwind CSS v4 · Zustand · Dexie/IndexedDB · Fabric.js · Framer Motion · Cheerio · jsPDF · html2canvas
+- **Framework**: [Next.js 14/15 App Router](https://nextjs.org/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) (with persistence middleware)
+- **Local Database**: [Dexie.js](https://dexie.org/) (IndexedDB wrapper)
+- **Scraping**: [Cheerio](https://cheerio.js.org/)
+- **Music Theory**: [Tonal.js](https://github.com/tonaljs/tonal)
+- **Canvas/Drawing**: [Fabric.js](http://fabricjs.com/)
+- **Exporting**: [jsPDF](https://parall.ax/products/jspdf) + [html2canvas](https://html2canvas.hertzen.com/)
+- **Window Management**: [react-rnd](https://github.com/bokuweb/react-rnd)
 
-## Getting Started
+## 🚀 Getting Started
 
-```bash
-git clone https://github.com/YOUR_USERNAME/bord.git
-cd bord
-npm install
-npm run dev
-```
+### Prerequisites
+- Node.js (v18 or higher recommended)
+- npm, yarn, pnpm, or bun
 
-Open [http://localhost:3000](http://localhost:3000)
+### Installation
 
-## Deployment
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd Bord
+   ```
 
-See the full step-by-step guide in [VERCEL_DEPLOYMENT.md](./VERCEL_DEPLOYMENT.md).
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-Quick version:
-1. Push to GitHub
-2. Import to [vercel.com](https://vercel.com) (free Hobby plan)
-3. Deploy — no environment variables needed
+3. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-## Documentation
+4. Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+5. You can also use [Bord](https://bord-phi.vercel.app) directly.
 
-Full technical documentation: [BORD_DOCUMENTATION.md](./BORD_DOCUMENTATION.md)
+## 📱 Usage
 
-Covers architecture, algorithms, component APIs, database schema, and known limitations.
+1. **Search**: Enter a worship song title on the home page.
+2. **View & Edit**: Use the bottom control panel to transpose, toggle NNS, draw annotations, or adjust auto-scroll speed.
+3. **MIDI**: Click the Piano icon to open the MIDI detector. Play chords on your connected MIDI keyboard or click the virtual keys.
+4. **Save**: Click the save icon to store the setlist in your local library.
+5. **Export**: Use the export button to download a `.bord` backup file or a PDF.
 
-## Data & Privacy
+## 📄 Documentation
 
-- **No cloud storage** — all setlists stored locally in browser IndexedDB
-- **No account required** — search is server-proxied through JrChord.com
-- **Portable** — export `.bord` files to move data between browsers/devices
+For a detailed breakdown of the application's architecture and modules, please refer to [documentation.md](./documentation.md).

@@ -11,7 +11,7 @@ export default function CanvasNotation() {
   const isDisposed = useRef(false);
   const isUndoOrLoading = useRef(false);
 
-  const { songs, isDrawingMode, currentAnnotation, saveAnnotation, clearAnnotation } = useViewerStore();
+  const { songs, setlistId, isDrawingMode, currentAnnotation, saveAnnotation, clearAnnotation } = useViewerStore();
 
   useEffect(() => {
     if (!canvasRef.current || !containerRef.current || songs.length === 0) return;
@@ -86,7 +86,7 @@ export default function CanvasNotation() {
       try { canvas?.dispose(); } catch { /* already disposed */ }
       fabricRef.current = null;
     };
-  }, [songs.length]); // Reinit canvas when songs are added/removed
+  }, [setlistId]); // BUG FIX #7: Re-init when the setlist changes (not just song count)
 
   // Sync drawing mode toggle without reinitializing
   useEffect(() => {
