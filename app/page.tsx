@@ -11,7 +11,7 @@ const EXAMPLE_SONGS = [
   'Yesus Engkau Tuhan',
   'Memuji Syukur',
   'Kau Yang Terindah',
-  'Aku Percaya',
+  'Sejuta Rasa',
 ];
 
 export default function Home() {
