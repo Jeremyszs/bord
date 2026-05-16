@@ -137,7 +137,7 @@ export default function Home() {
           </h1>
           <p className="text-sm sm:text-base max-w-sm text-gray-500">
             Chord sheets for worship musicians.<br />
-            Transpose · Auto-scroll · Annotate.
+            Transpose · Auto-scroll · Annotate
           </p>
         </div>
 
