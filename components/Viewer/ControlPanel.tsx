@@ -107,6 +107,32 @@ export default function ControlPanel() {
     
     const longUrl = `${originUrl}${window.location.pathname}#data=${compressed}`;
 
+    // Robust clipboard copy utility to bypass the "Document is not focused" error
+    // that occurs when trying to use navigator.clipboard after an async fetch
+    const copyToClipboard = async (text: string) => {
+      try {
+        if (!document.hasFocus()) window.focus();
+        await navigator.clipboard.writeText(text);
+      } catch (err) {
+        // Fallback for when modern clipboard API is blocked by async delay
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+        } catch (e) {
+          console.error('Fallback copy failed', e);
+        }
+        document.body.removeChild(textArea);
+      }
+    };
+
     try {
       const res = await fetch('/api/shorten', {
         method: 'POST',
@@ -117,13 +143,13 @@ export default function ControlPanel() {
       const resData = await res.json();
       const finalUrl = resData.shortUrl || longUrl;
 
-      await navigator.clipboard.writeText(finalUrl);
+      await copyToClipboard(finalUrl);
       setShowLinkToast(true);
       setTimeout(() => setShowLinkToast(false), 3000);
     } catch (err) {
       console.error('Failed to shorten or copy link: ', err);
       // Fallback to long URL if API or network fails
-      navigator.clipboard.writeText(longUrl);
+      await copyToClipboard(longUrl);
       setShowLinkToast(true);
       setTimeout(() => setShowLinkToast(false), 3000);
     } finally {
