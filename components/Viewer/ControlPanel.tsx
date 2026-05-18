@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewerStore } from '@/store/viewerStore';
 import { useMidiStore } from '@/store/midiStore';
-import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano } from 'lucide-react';
+import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer } from 'lucide-react';
 import Slider from '@/components/UI/Slider';
+import MetronomePanel from './MetronomePanel';
 
 export default function ControlPanel() {
   const {
@@ -29,6 +30,7 @@ export default function ControlPanel() {
 
   const [showSaveToast, setShowSaveToast] = React.useState(false);
   const [showScrollSlider, setShowScrollSlider] = useState(false);
+  const [showMetronome, setShowMetronome] = useState(false);
 
   const handleExportBord = () => {
     if (songs.length === 0) return;
@@ -110,6 +112,8 @@ export default function ControlPanel() {
           )}
         </AnimatePresence>
 
+        <MetronomePanel isVisible={showMetronome} />
+
         {/* Main pill */}
         <div 
           className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
@@ -143,6 +147,13 @@ export default function ControlPanel() {
 
           <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
 
+          {/* Metronome */}
+          <motion.button style={touchStyle} whileTap={{ scale: 0.88 }}
+            onClick={() => { setShowMetronome(s => !s); setShowScrollSlider(false); }}
+            className={showMetronome ? activBtn : btn} title="Metronome">
+            <Timer size={iconSize} />
+          </motion.button>
+
           {/* Play / Scroll */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={togglePlaying}
             className={isPlaying ? activBtn : btn} title={isPlaying ? 'Pause' : 'Auto-scroll'}>
@@ -151,7 +162,7 @@ export default function ControlPanel() {
 
           {/* Scroll slider toggle */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }}
-            onClick={() => setShowScrollSlider(s => !s)}
+            onClick={() => { setShowScrollSlider(s => !s); setShowMetronome(false); }}
             className={showScrollSlider ? activBtn : btn} title="Scroll Speed">
             <SlidersHorizontal size={iconSize} />
           </motion.button>

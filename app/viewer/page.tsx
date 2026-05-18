@@ -8,6 +8,7 @@ import ScrollController from '@/components/Viewer/ScrollController';
 import CanvasNotation from '@/components/Viewer/CanvasNotation';
 import MidiPianoWindow from '@/components/Viewer/MidiPianoWindow';
 import { useMidiProcessor } from '@/hooks/useMidiProcessor';
+import { useMetronomeEngine } from '@/hooks/useMetronomeEngine';
 import { Plus, Search, Loader2, Home } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,6 +21,9 @@ export default function ViewerPage() {
 
   // Activate MIDI listener (attaches/detaches automatically based on store state)
   useMidiProcessor();
+
+  // Activate Metronome Audio Engine
+  useMetronomeEngine();
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
