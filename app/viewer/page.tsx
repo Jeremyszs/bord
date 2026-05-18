@@ -19,6 +19,7 @@ export default function ViewerPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isFetchingShare, setIsFetchingShare] = useState(false);
 
   // Activate MIDI listener (attaches/detaches automatically based on store state)
   useMidiProcessor();
@@ -33,8 +34,50 @@ export default function ViewerPage() {
       try {
         const jsonString = LZString.decompressFromEncodedURIComponent(compressed);
         if (jsonString) {
-          importBordFile(jsonString);
-          window.history.replaceState(null, '', window.location.pathname);
+          const parsed = JSON.parse(jsonString);
+          
+          if (parsed.version === 2) {
+            // Version 2: Lightweight URL (only contains titles/artists)
+            const rebuildSetlist = async () => {
+              setIsFetchingShare(true);
+              const fullSongs = [];
+              try {
+                for (const lightSong of parsed.songs) {
+                  const query = encodeURIComponent(`${lightSong.title} ${lightSong.artist}`);
+                  const res = await fetch(`/api/scrape?songTitle=${query}`);
+                  if (res.ok) {
+                    const data = await res.json();
+                    fullSongs.push({
+                      ...data,
+                      listId: crypto.randomUUID(),
+                      transposeSteps: lightSong.transposeSteps || 0,
+                      sourceType: 'jrchord'
+                    });
+                  }
+                }
+                
+                // Load into store as a mock version 1 file
+                importBordFile(JSON.stringify({
+                  version: 1,
+                  songs: fullSongs,
+                  isNNSActive: parsed.isNNSActive,
+                  currentAnnotation: null
+                }));
+              } catch (e) {
+                console.error("Failed to rebuild setlist", e);
+                alert("Failed to load some songs from the shared link.");
+              } finally {
+                setIsFetchingShare(false);
+                window.history.replaceState(null, '', window.location.pathname);
+              }
+            };
+            rebuildSetlist();
+            
+          } else {
+            // Version 1: Legacy full raw data payload
+            importBordFile(jsonString);
+            window.history.replaceState(null, '', window.location.pathname);
+          }
         }
       } catch (e) {
         console.error("Failed to load setlist from URL", e);
@@ -65,6 +108,14 @@ export default function ViewerPage() {
   return (
     <div className="min-h-screen font-sans" style={{ backgroundColor: '#f8f9fa' }}>
       <ScrollController />
+
+      {/* Loading Overlay for Share Link */}
+      {isFetchingShare && (
+        <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
+          <Loader2 size={48} className="animate-spin text-[#007AFF] mb-4" />
+          <p className="text-gray-600 font-medium">Rebuilding Setlist...</p>
+        </div>
+      )}
 
       {/* Floating Home Button */}
       <Link

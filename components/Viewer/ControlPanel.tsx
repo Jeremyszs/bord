@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewerStore } from '@/store/viewerStore';
 import { useMidiStore } from '@/store/midiStore';
-import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer, Link as LinkIcon } from 'lucide-react';
+import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer, Link as LinkIcon, Loader2 } from 'lucide-react';
 import Slider from '@/components/UI/Slider';
 import MetronomePanel from './MetronomePanel';
 import LZString from 'lz-string';
@@ -33,6 +33,7 @@ export default function ControlPanel() {
   const [showLinkToast, setShowLinkToast] = React.useState(false);
   const [showScrollSlider, setShowScrollSlider] = useState(false);
   const [showMetronome, setShowMetronome] = useState(false);
+  const [isShortening, setIsShortening] = useState(false);
 
   const handleExportBord = () => {
     if (songs.length === 0) return;
@@ -74,27 +75,60 @@ export default function ControlPanel() {
     }, 100);
   };
 
-  const handleShareLink = () => {
-    if (songs.length === 0) return;
+  const handleShareLink = async () => {
+    if (songs.length === 0 || isShortening) return;
+    setIsShortening(true);
+
     const state = useViewerStore.getState();
 
+    // Create a ultra-lightweight version of the setlist for the URL
+    // This avoids HTTP 431 (URI Too Long) errors when proxying to shorteners.
+    const lightweightSongs = state.songs.map(s => ({
+      title: s.title,
+      artist: s.artist,
+      transposeSteps: s.transposeSteps
+    }));
+
     const data = {
-      version: 1,
-      songs: state.songs,
+      version: 2,
+      songs: lightweightSongs,
       isNNSActive: state.isNNSActive,
-      currentAnnotation: state.currentAnnotation,
+      // Annotations are excluded to ensure the link remains tiny
     };
 
     const jsonString = JSON.stringify(data);
     const compressed = LZString.compressToEncodedURIComponent(jsonString);
-    const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
+    
+    // Fallback URL if we are testing on localhost (TinyURL often rejects localhost)
+    let originUrl = window.location.origin;
+    if (originUrl.includes('localhost')) {
+      originUrl = 'https://bord.app'; // Mock production domain so TinyURL accepts it for testing
+    }
+    
+    const longUrl = `${originUrl}${window.location.pathname}#data=${compressed}`;
 
-    navigator.clipboard.writeText(url).then(() => {
+    try {
+      const res = await fetch('/api/shorten', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: longUrl })
+      });
+      
+      const resData = await res.json();
+      const finalUrl = resData.shortUrl || longUrl;
+
+      await navigator.clipboard.writeText(finalUrl);
       setShowLinkToast(true);
       setTimeout(() => setShowLinkToast(false), 3000);
-    }).catch(err => {
-      console.error('Failed to copy link: ', err);
-    });
+    } catch (err) {
+      console.error('Failed to shorten or copy link: ', err);
+      // Fallback to long URL if API or network fails
+      navigator.clipboard.writeText(longUrl);
+      setShowLinkToast(true);
+      setTimeout(() => setShowLinkToast(false), 3000);
+    } finally {
+      setIsShortening(false);
+    }
   };
 
   const handleSaveToLibrary = async () => {
@@ -216,8 +250,9 @@ export default function ControlPanel() {
 
           {/* Share Link */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleShareLink}
-            className={btn} title="Share Link">
-            <LinkIcon size={iconSize} />
+            disabled={isShortening}
+            className={`${btn} ${isShortening ? 'opacity-50' : ''}`} title="Share Link">
+            {isShortening ? <Loader2 size={iconSize} className="animate-spin text-[#007AFF]" /> : <LinkIcon size={iconSize} />}
           </motion.button>
 
           {/* Export .bord */}
