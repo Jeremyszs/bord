@@ -23,6 +23,36 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
     setTimeSignature({ beatsPerBar, beatValue });
   };
 
+  const tapTimesRef = React.useRef<number[]>([]);
+
+  const handleTap = () => {
+    const now = performance.now();
+    const tapTimes = tapTimesRef.current;
+    
+    // If it's been more than 2 seconds since the last tap, reset the array
+    if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > 2000) {
+      tapTimes.length = 0;
+    }
+    
+    tapTimes.push(now);
+    
+    // Keep only the last 4 taps to average
+    if (tapTimes.length > 4) {
+      tapTimes.shift();
+    }
+    
+    if (tapTimes.length >= 2) {
+      let totalInterval = 0;
+      for (let i = 1; i < tapTimes.length; i++) {
+        totalInterval += (tapTimes[i] - tapTimes[i - 1]);
+      }
+      const averageInterval = totalInterval / (tapTimes.length - 1);
+      
+      const calculatedBpm = Math.round(60000 / averageInterval);
+      setBpm(Math.max(40, Math.min(250, calculatedBpm)));
+    }
+  };
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -57,7 +87,7 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
           </div>
 
           {/* Controls Row */}
-          <div className="flex items-center gap-4 mb-5">
+          <div className="flex items-center gap-3 mb-5">
             <button
               onClick={togglePlay}
               className={`flex items-center justify-center w-12 h-12 rounded-full shrink-0 transition-colors ${
@@ -68,9 +98,15 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-1" />}
             </button>
-            <div className="flex-1">
+            <div className="flex-1 px-1">
               <Slider min={40} max={250} value={bpm} onChange={setBpm} />
             </div>
+            <button
+              onClick={handleTap}
+              className="flex items-center justify-center h-10 px-3.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-[10px] uppercase tracking-widest hover:bg-gray-200 active:bg-gray-300 active:scale-95 shrink-0 transition-all border border-gray-200"
+            >
+              Tap
+            </button>
           </div>
 
           {/* Visual Flash Indicator */}
