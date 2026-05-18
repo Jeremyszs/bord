@@ -7,6 +7,7 @@ import ControlPanel from '@/components/Viewer/ControlPanel';
 import ScrollController from '@/components/Viewer/ScrollController';
 import CanvasNotation from '@/components/Viewer/CanvasNotation';
 import MidiPianoWindow from '@/components/Viewer/MidiPianoWindow';
+import SetlistNavigatorWindow from '@/components/Viewer/SetlistNavigatorWindow';
 import { useMidiProcessor } from '@/hooks/useMidiProcessor';
 import { useMetronomeEngine } from '@/hooks/useMetronomeEngine';
 import { Plus, Search, Loader2, Home } from 'lucide-react';
@@ -138,7 +139,7 @@ export default function ViewerPage() {
 
           <div className="flex flex-col">
             {songs.map((song, idx) => (
-              <div key={song.listId} className={idx > 0 ? "border-t border-gray-200" : ""}>
+              <div key={song.listId} id={`song-${song.listId}`} className={idx > 0 ? "border-t border-gray-200" : ""}>
                 <ChordSheetRender song={song} index={idx} total={songs.length} />
               </div>
             ))}
@@ -216,6 +217,7 @@ export default function ViewerPage() {
 
       <ControlPanel />
       <MidiPianoWindow />
+      <SetlistNavigatorWindow />
     </div>
   );
 }

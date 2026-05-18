@@ -16,11 +16,15 @@ interface ViewerState {
   isPlaying: boolean;
   currentAnnotation: string | null;
   annotationHistory: string[];
+  showSetlistNav: boolean;
+  navWindowRect: { x: number; y: number; width: number | string; height: number | string };
   startNewSetlist: (data: ScrapedSongObject) => void;
   addSong: (data: ScrapedSongObject) => void;
   removeSong: (listId: string) => void;
   setSongTranspose: (listId: string, steps: number | ((prev: number) => number)) => void;
   reorderSongs: (fromIndex: number, toIndex: number) => void;
+  toggleSetlistNav: () => void;
+  setNavWindowRect: (rect: Partial<{ x: number; y: number; width: number | string; height: number | string }>) => void;
   toggleNNS: () => void;
   toggleDrawingMode: () => void;
   setScrollSpeed: (speed: number) => void;
@@ -46,6 +50,8 @@ export const useViewerStore = create<ViewerState>()(
       isPlaying: false,
       currentAnnotation: null,
       annotationHistory: [],
+      showSetlistNav: false,
+      navWindowRect: { x: 20, y: 80, width: 280, height: 400 },
       startNewSetlist: (data) => set({
         setlistId: crypto.randomUUID(),
         songs: [{ ...data, listId: crypto.randomUUID(), transposeSteps: 0, sourceType: 'jrchord' }],
@@ -76,6 +82,8 @@ export const useViewerStore = create<ViewerState>()(
           songs.splice(toIndex, 0, moved);
           return { songs };
         }),
+      toggleSetlistNav: () => set((state) => ({ showSetlistNav: !state.showSetlistNav })),
+      setNavWindowRect: (rect) => set((state) => ({ navWindowRect: { ...state.navWindowRect, ...rect } })),
       toggleNNS: () => set((state) => ({ isNNSActive: !state.isNNSActive })),
       toggleDrawingMode: () => set((state) => ({ isDrawingMode: !state.isDrawingMode })),
       setScrollSpeed: (speed) => set({ scrollSpeed: speed }),
@@ -156,6 +164,7 @@ export const useViewerStore = create<ViewerState>()(
       partialize: (state) => ({ 
         scrollSpeed: state.scrollSpeed, 
         isDrawingMode: state.isDrawingMode,
+        navWindowRect: state.navWindowRect,
       }),
     }
   )

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewerStore } from '@/store/viewerStore';
 import { useMidiStore } from '@/store/midiStore';
-import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer, Link as LinkIcon, Loader2 } from 'lucide-react';
+import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer, Link as LinkIcon, ListMusic } from 'lucide-react';
 import Slider from '@/components/UI/Slider';
 import MetronomePanel from './MetronomePanel';
 import LZString from 'lz-string';
@@ -25,6 +25,8 @@ export default function ControlPanel() {
     currentAnnotation,
     clearSongs,
     syncWithDb,
+    showSetlistNav,
+    toggleSetlistNav,
   } = useViewerStore();
 
   const { isMidiEnabled, toggleMidi } = useMidiStore();
@@ -33,7 +35,6 @@ export default function ControlPanel() {
   const [showLinkToast, setShowLinkToast] = React.useState(false);
   const [showScrollSlider, setShowScrollSlider] = useState(false);
   const [showMetronome, setShowMetronome] = useState(false);
-  const [isShortening, setIsShortening] = useState(false);
 
   const handleExportBord = () => {
     if (songs.length === 0) return;
@@ -76,13 +77,11 @@ export default function ControlPanel() {
   };
 
   const handleShareLink = async () => {
-    if (songs.length === 0 || isShortening) return;
-    setIsShortening(true);
+    if (songs.length === 0) return;
 
     const state = useViewerStore.getState();
 
     // Create a ultra-lightweight version of the setlist for the URL
-    // This avoids HTTP 431 (URI Too Long) errors when proxying to shorteners.
     const lightweightSongs = state.songs.map(s => ({
       title: s.title,
       artist: s.artist,
@@ -93,28 +92,18 @@ export default function ControlPanel() {
       version: 2,
       songs: lightweightSongs,
       isNNSActive: state.isNNSActive,
-      // Annotations are excluded to ensure the link remains tiny
     };
 
     const jsonString = JSON.stringify(data);
     const compressed = LZString.compressToEncodedURIComponent(jsonString);
-    
-    // Fallback URL if we are testing on localhost (TinyURL often rejects localhost)
-    let originUrl = window.location.origin;
-    if (originUrl.includes('localhost')) {
-      originUrl = 'https://bord.app'; // Mock production domain so TinyURL accepts it for testing
-    }
-    
-    const longUrl = `${originUrl}${window.location.pathname}#data=${compressed}`;
+    const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
 
-    // Robust clipboard copy utility to bypass the "Document is not focused" error
-    // that occurs when trying to use navigator.clipboard after an async fetch
+    // Robust clipboard copy utility
     const copyToClipboard = async (text: string) => {
       try {
         if (!document.hasFocus()) window.focus();
         await navigator.clipboard.writeText(text);
       } catch (err) {
-        // Fallback for when modern clipboard API is blocked by async delay
         const textArea = document.createElement('textarea');
         textArea.value = text;
         textArea.style.position = 'fixed';
@@ -133,28 +122,9 @@ export default function ControlPanel() {
       }
     };
 
-    try {
-      const res = await fetch('/api/shorten', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: longUrl })
-      });
-      
-      const resData = await res.json();
-      const finalUrl = resData.shortUrl || longUrl;
-
-      await copyToClipboard(finalUrl);
-      setShowLinkToast(true);
-      setTimeout(() => setShowLinkToast(false), 3000);
-    } catch (err) {
-      console.error('Failed to shorten or copy link: ', err);
-      // Fallback to long URL if API or network fails
-      await copyToClipboard(longUrl);
-      setShowLinkToast(true);
-      setTimeout(() => setShowLinkToast(false), 3000);
-    } finally {
-      setIsShortening(false);
-    }
+    await copyToClipboard(url);
+    setShowLinkToast(true);
+    setTimeout(() => setShowLinkToast(false), 3000);
   };
 
   const handleSaveToLibrary = async () => {
@@ -176,8 +146,7 @@ export default function ControlPanel() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2"
-        style={{ width: 'calc(100vw - 32px)', maxWidth: '680px' }}
+        className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 w-[calc(100vw-16px)] sm:w-max sm:max-w-[calc(100vw-32px)]"
       >
         {/* Scroll speed popover (mobile-friendly) */}
         <AnimatePresence>
@@ -232,6 +201,12 @@ export default function ControlPanel() {
 
           <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
 
+          {/* Setlist Navigator */}
+          <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleSetlistNav}
+            className={showSetlistNav ? activBtn : btn} title="Setlist Navigation">
+            <ListMusic size={iconSize} />
+          </motion.button>
+
           {/* Metronome */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }}
             onClick={() => { setShowMetronome(s => !s); setShowScrollSlider(false); }}
@@ -276,9 +251,8 @@ export default function ControlPanel() {
 
           {/* Share Link */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleShareLink}
-            disabled={isShortening}
-            className={`${btn} ${isShortening ? 'opacity-50' : ''}`} title="Share Link">
-            {isShortening ? <Loader2 size={iconSize} className="animate-spin text-[#007AFF]" /> : <LinkIcon size={iconSize} />}
+            className={btn} title="Share Link">
+            <LinkIcon size={iconSize} />
           </motion.button>
 
           {/* Export .bord */}

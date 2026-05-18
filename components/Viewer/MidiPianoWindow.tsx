@@ -213,25 +213,26 @@ export default function MidiPianoWindow() {
   if (!showPianoDisplay) return null;
 
   return (
-    // BUG FIX #2: Use `position` prop (not `default`) so the window respects
-    // the persisted windowRect on every open, not just the first mount.
-    <Rnd
-      position={{ x: windowRect.x, y: windowRect.y }}
-      size={{ width: windowRect.width, height: windowRect.height }}
-      minWidth={380}
-      minHeight={180}
-      maxWidth={1200}
-      maxHeight={480}
-      bounds="window"
-      dragHandleClassName="midi-drag-handle"
-      enableResizing={{
-        top: true, right: true, bottom: true, left: true,
-        topRight: true, bottomRight: true, bottomLeft: true, topLeft: true,
-      }}
-      onDragStop={handleDragStop}
-      onResizeStop={handleResizeStop}
-      style={{ zIndex: 9999 }}
-    >
+    <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }}>
+      {/* BUG FIX #2: Use `position` prop (not `default`) so the window respects
+          the persisted windowRect on every open, not just the first mount. */}
+      <Rnd
+        position={{ x: windowRect.x, y: windowRect.y }}
+        size={{ width: windowRect.width, height: windowRect.height }}
+        minWidth={380}
+        minHeight={180}
+        maxWidth={1200}
+        maxHeight={480}
+        bounds="window"
+        dragHandleClassName="midi-drag-handle"
+        enableResizing={{
+          top: true, right: true, bottom: true, left: true,
+          topRight: true, bottomRight: true, bottomLeft: true, topLeft: true,
+        }}
+        onDragStop={handleDragStop}
+        onResizeStop={handleResizeStop}
+        style={{ pointerEvents: 'auto' }}
+      >
       <div
         className="flex flex-col w-full h-full rounded-2xl overflow-hidden border border-gray-200/80 shadow-2xl"
         style={{
@@ -336,6 +337,7 @@ export default function MidiPianoWindow() {
           </span>
         </div>
       </div>
-    </Rnd>
+      </Rnd>
+    </div>
   );
 }
