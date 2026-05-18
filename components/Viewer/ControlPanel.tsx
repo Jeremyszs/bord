@@ -4,9 +4,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useViewerStore } from '@/store/viewerStore';
 import { useMidiStore } from '@/store/midiStore';
-import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer } from 'lucide-react';
+import { Hash, RotateCcw, PenTool, Play, Pause, Download, Undo2, Trash2, Save, FileText, SlidersHorizontal, Piano, Timer, Link as LinkIcon } from 'lucide-react';
 import Slider from '@/components/UI/Slider';
 import MetronomePanel from './MetronomePanel';
+import LZString from 'lz-string';
 
 export default function ControlPanel() {
   const {
@@ -29,6 +30,7 @@ export default function ControlPanel() {
   const { isMidiEnabled, toggleMidi } = useMidiStore();
 
   const [showSaveToast, setShowSaveToast] = React.useState(false);
+  const [showLinkToast, setShowLinkToast] = React.useState(false);
   const [showScrollSlider, setShowScrollSlider] = useState(false);
   const [showMetronome, setShowMetronome] = useState(false);
 
@@ -70,6 +72,29 @@ export default function ControlPanel() {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
     }, 100);
+  };
+
+  const handleShareLink = () => {
+    if (songs.length === 0) return;
+    const state = useViewerStore.getState();
+
+    const data = {
+      version: 1,
+      songs: state.songs,
+      isNNSActive: state.isNNSActive,
+      currentAnnotation: state.currentAnnotation,
+    };
+
+    const jsonString = JSON.stringify(data);
+    const compressed = LZString.compressToEncodedURIComponent(jsonString);
+    const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
+
+    navigator.clipboard.writeText(url).then(() => {
+      setShowLinkToast(true);
+      setTimeout(() => setShowLinkToast(false), 3000);
+    }).catch(err => {
+      console.error('Failed to copy link: ', err);
+    });
   };
 
   const handleSaveToLibrary = async () => {
@@ -115,7 +140,7 @@ export default function ControlPanel() {
         <MetronomePanel isVisible={showMetronome} />
 
         {/* Main pill */}
-        <div 
+        <div
           className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
           style={{ justifyContent: 'safe center' }}
         >
@@ -189,6 +214,12 @@ export default function ControlPanel() {
             <Save size={iconSize} />
           </motion.button>
 
+          {/* Share Link */}
+          <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleShareLink}
+            className={btn} title="Share Link">
+            <LinkIcon size={iconSize} />
+          </motion.button>
+
           {/* Export .bord */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleExportBord}
             className={btn} title="Export .bord">
@@ -221,6 +252,21 @@ export default function ControlPanel() {
             </svg>
           </div>
           <span className="font-medium text-sm whitespace-nowrap">Saved to Local Library</span>
+        </motion.div>
+      )}
+
+      {/* Link Copied Toast */}
+      {showLinkToast && (
+        <motion.div
+          initial={{ opacity: 0, y: 40, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.9 }}
+          className="fixed bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 bg-gray-900 text-white rounded-full shadow-2xl z-50 pointer-events-none"
+        >
+          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
+            <LinkIcon size={14} className="text-[#007AFF]" />
+          </div>
+          <span className="font-medium text-sm whitespace-nowrap">Share Link Copied!</span>
         </motion.div>
       )}
     </>

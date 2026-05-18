@@ -11,9 +11,10 @@ import { useMidiProcessor } from '@/hooks/useMidiProcessor';
 import { useMetronomeEngine } from '@/hooks/useMetronomeEngine';
 import { Plus, Search, Loader2, Home } from 'lucide-react';
 import Link from 'next/link';
+import LZString from 'lz-string';
 
 export default function ViewerPage() {
-  const { songs, addSong } = useViewerStore();
+  const { songs, addSong, importBordFile } = useViewerStore();
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -24,6 +25,22 @@ export default function ViewerPage() {
 
   // Activate Metronome Audio Engine
   useMetronomeEngine();
+
+  // Load from share link hash
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.startsWith('#data=')) {
+      const compressed = window.location.hash.substring(6);
+      try {
+        const jsonString = LZString.decompressFromEncodedURIComponent(compressed);
+        if (jsonString) {
+          importBordFile(jsonString);
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      } catch (e) {
+        console.error("Failed to load setlist from URL", e);
+      }
+    }
+  }, [importBordFile]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
