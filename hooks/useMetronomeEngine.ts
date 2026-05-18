@@ -64,8 +64,33 @@ export function useMetronomeEngine() {
       click2BufferRef.current = b2;
     });
 
+    // iOS/Safari Web Audio API Autoplay Policy Fix:
+    // AudioContext must be resumed from a direct user interaction. 
+    // We attach a one-time listener to the window to unlock it on the first tap/click.
+    const unlockAudioContext = () => {
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          // Remove listeners once successfully unlocked
+          window.removeEventListener('click', unlockAudioContext);
+          window.removeEventListener('touchstart', unlockAudioContext);
+          window.removeEventListener('keydown', unlockAudioContext);
+        }).catch(err => console.warn('AudioContext unlock failed', err));
+      } else {
+        window.removeEventListener('click', unlockAudioContext);
+        window.removeEventListener('touchstart', unlockAudioContext);
+        window.removeEventListener('keydown', unlockAudioContext);
+      }
+    };
+
+    window.addEventListener('click', unlockAudioContext);
+    window.addEventListener('touchstart', unlockAudioContext, { passive: true });
+    window.addEventListener('keydown', unlockAudioContext);
+
     return () => {
       isMounted = false;
+      window.removeEventListener('click', unlockAudioContext);
+      window.removeEventListener('touchstart', unlockAudioContext);
+      window.removeEventListener('keydown', unlockAudioContext);
       ctx.close();
     };
   }, []);
