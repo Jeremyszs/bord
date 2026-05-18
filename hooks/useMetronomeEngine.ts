@@ -26,7 +26,7 @@ export function useMetronomeEngine() {
   const nextNoteTimeRef = useRef(0.0);
   const currentBeatInBarRef = useRef(0);
   const timerIDRef = useRef<number | null>(null);
-  
+
   // Queue of notes for UI synchronization
   const notesInQueueRef = useRef<{ note: number; time: number }[]>([]);
   const lastBeatDrawnRef = useRef(-1);
