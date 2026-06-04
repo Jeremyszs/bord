@@ -105,8 +105,7 @@ export function convertToNNS(chordStr: string, tonicKey: string): string {
 }
 
 // ── Keep parseChordSheet for any future use ──────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function parseChordSheet(rawContent: string): any {
+export function parseChordSheet(rawContent: string): InstanceType<typeof ChordSheetJS.UltimateGuitarParser>['song'] {
   const parser = new ChordSheetJS.UltimateGuitarParser({ preserveWhitespace: false });
   return parser.parse(rawContent);
 }

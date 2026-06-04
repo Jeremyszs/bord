@@ -12,8 +12,9 @@ export async function GET(request: Request) {
   try {
     const songData = await scrapeJrchord(songTitle);
     return NextResponse.json(songData);
-  } catch (error: any) {
-    console.error('[scrape] Error:', error.message);
-    return NextResponse.json({ error: error.message || 'Failed to find song' }, { status: 500 });
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error('[scrape] Error:', msg);
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

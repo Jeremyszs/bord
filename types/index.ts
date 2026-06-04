@@ -20,3 +20,21 @@ export interface LocalStorageAnnotationSchema {
   updatedAt: string;
   canvasState: string;
 }
+
+// ─── Extended song type used across stores ──────────────────────────────────────
+
+export interface SonglistItem extends ScrapedSongObject {
+  listId: string;
+  transposeSteps: number;
+}
+
+// ─── Saved setlist type for IndexedDB ───────────────────────────────────────────
+
+export interface SavedSetlistData {
+  id: string;
+  name: string;
+  songs: SonglistItem[];
+  isNnsActive: boolean;
+  annotations: string | null;
+  lastModified: number;
+}

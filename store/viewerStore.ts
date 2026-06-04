@@ -1,11 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { ScrapedSongObject } from '@/types';
-
-export interface SonglistItem extends ScrapedSongObject {
-  listId: string;
-  transposeSteps: number;
-}
+import type { ScrapedSongObject, SonglistItem, SavedSetlistData } from '@/types';
 
 interface ViewerState {
   setlistId: string;
@@ -35,7 +30,7 @@ interface ViewerState {
   clearAnnotation: () => void;
   clearSongs: () => void;
   syncWithDb: () => Promise<void>;
-  loadFromLibrary: (saved: any) => void;
+  loadFromLibrary: (saved: SavedSetlistData) => void;
   importBordFile: (data: string) => void;
 }
 
@@ -134,7 +129,7 @@ export const useViewerStore = create<ViewerState>()(
           lastModified: Date.now()
         });
       },
-      loadFromLibrary: (saved: any) => set({
+      loadFromLibrary: (saved: SavedSetlistData) => set({
         setlistId: saved.id,
         songs: saved.songs,
         isNNSActive: saved.isNnsActive || false,

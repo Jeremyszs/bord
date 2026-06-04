@@ -12,6 +12,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Bord — Chord Sheets for Worship Musicians",
   description: "Search, transpose, and annotate chord sheets for worship music. Offline-first with Nashville Number System support.",
+  icons: {
+    icon: "/images/bord-logo.png",
+  },
 };
 
 // ── Viewport (must be a separate export in Next.js App Router) ────────────────

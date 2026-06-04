@@ -2,18 +2,19 @@
 
 import React, { useCallback } from 'react';
 import { Rnd } from 'react-rnd';
+import type { RndDragCallback, RndResizeCallback } from 'react-rnd';
 import { X, ListMusic, ChevronRight } from 'lucide-react';
 import { useViewerStore } from '@/store/viewerStore';
 
 export default function SetlistNavigatorWindow() {
   const { songs, showSetlistNav, toggleSetlistNav, navWindowRect, setNavWindowRect } = useViewerStore();
 
-  const handleDragStop = useCallback((_e: any, d: { x: number; y: number }) => {
+  const handleDragStop: RndDragCallback = useCallback((_e, d) => {
     setNavWindowRect({ x: d.x, y: d.y });
   }, [setNavWindowRect]);
 
-  const handleResizeStop = useCallback(
-    (_e: any, _dir: any, ref: HTMLElement, _delta: any, pos: { x: number; y: number }) => {
+  const handleResizeStop: RndResizeCallback = useCallback(
+    (_e, _dir, ref, _delta, pos) => {
       setNavWindowRect({
         width: parseInt(ref.style.width),
         height: parseInt(ref.style.height),

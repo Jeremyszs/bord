@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { useViewerStore, SonglistItem } from '@/store/viewerStore';
+import { useViewerStore } from '@/store/viewerStore';
+import type { SonglistItem } from '@/types';
 import { transposeChord, convertToNNS } from '@/lib/music-engine';
 
 // ── Helpers ────────────────────────────────────────────────────────────────────

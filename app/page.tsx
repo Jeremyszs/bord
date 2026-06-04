@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useViewerStore } from '@/store/viewerStore';
-import { Search, Loader2, Music2, ChevronRight, Upload, Library, Trash2, AlertTriangle, X } from 'lucide-react';
+import { Search, Loader2, ChevronRight, Upload, Library, Trash2, AlertTriangle, X, Mic2 } from 'lucide-react';
 import { db, SavedSetlist } from '@/lib/db';
 
 const EXAMPLE_SONGS = [
@@ -51,8 +51,9 @@ export default function Home() {
       if (!res.ok) throw new Error(data.error || 'Song not found');
       startNewSetlist(data);
       router.push('/viewer');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Song not found';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }
@@ -72,8 +73,9 @@ export default function Home() {
       importBordFile(text);
       await syncWithDb();
       router.push('/viewer');
-    } catch (err: any) {
-      setError(err.message || 'Failed to import file');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Failed to import file';
+      setError(msg);
     } finally {
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
@@ -100,10 +102,20 @@ export default function Home() {
   return (
     <main
       className="min-h-screen flex flex-col items-center font-sans"
-      style={{ background: 'linear-gradient(160deg, #f0f7ff 0%, #ffffff 50%, #f5f0ff 100%)' }}
+      style={{ background: '#f5f9ff' }}
     >
       {/* ── Top Bar ───────────────────────────────────────────────────────────── */}
-      <div className="w-full flex justify-end px-4 sm:px-6 pt-4 sm:pt-6">
+      <div className="w-full flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-6">
+        {/* Left: Audio Analyzer */}
+        <button
+          onClick={() => router.push('/chord-analyzer')}
+          style={{ touchAction: 'manipulation' }}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white shadow-sm border border-gray-200 text-sm font-semibold text-[#007AFF] active:scale-95 transition-transform hover:bg-blue-50"
+        >
+          <Mic2 size={16} /> Audio Analyzer
+        </button>
+
+        {/* Right: Import .bord */}
         <input
           type="file"
           accept=".bord"
@@ -126,11 +138,14 @@ export default function Home() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8 sm:mb-10 text-center">
           <div
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-4 sm:mb-6"
-            style={{ background: 'linear-gradient(135deg, #007AFF, #5856D6)', boxShadow: '0 12px 32px rgba(0,122,255,0.35)' }}
+            className="w-16 h-16 sm:w-20 sm:h-20 mb-4 sm:mb-6 overflow-hidden"
           >
-            <Music2 size={30} color="#fff" className="sm:hidden" />
-            <Music2 size={38} color="#fff" className="hidden sm:block" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/bord-logo.png"
+              alt="Bord"
+              className="w-full h-full object-contain p-1.5 sm:p-2"
+            />
           </div>
           <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-2 sm:mb-3 text-black">
             Bord
@@ -166,7 +181,7 @@ export default function Home() {
                 disabled={isLoading || !query.trim()}
                 style={{
                   touchAction: 'manipulation',
-                  background: isLoading || !query.trim() ? '#bfdbfe' : 'linear-gradient(135deg, #007AFF, #5856D6)',
+                  background: isLoading || !query.trim() ? '#bfdbfe' : '#007AFF',
                   cursor: isLoading || !query.trim() ? 'not-allowed' : 'pointer',
                   boxShadow: isLoading || !query.trim() ? 'none' : '0 4px 14px rgba(0,122,255,0.4)',
                 }}

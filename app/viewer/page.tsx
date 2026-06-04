@@ -99,8 +99,9 @@ export default function ViewerPage() {
       addSong(data);
       setQuery('');
       setShowSearch(false);
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to add song';
+      setError(msg);
     } finally {
       setIsLoading(false);
     }

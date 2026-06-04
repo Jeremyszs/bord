@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useMemo } from 'react';
-import { useViewerStore, SonglistItem } from '@/store/viewerStore';
+import { useViewerStore } from '@/store/viewerStore';
+import type { SonglistItem } from '@/types';
 import { transposeChord, convertToNNS, CHROMATIC_SCALE } from '@/lib/music-engine';
 import { Minus, Plus, X, ChevronUp, ChevronDown } from 'lucide-react';
 
@@ -229,7 +230,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
 
           {isNNSActive && (
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{ backgroundColor: '#f5f0ff', color: '#5856D6' }}>
+              style={{ backgroundColor: '#e8f0fe', color: '#007AFF' }}>
               NNS
             </span>
           )}

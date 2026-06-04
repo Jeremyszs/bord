@@ -35,13 +35,13 @@ export function useMetronomeEngine() {
   // --- 1. Audio Initialization ---
   useEffect(() => {
     let isMounted = true;
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) {
+    const ACtx = window.AudioContext || (window as unknown as { webkitAudioContext?: new () => AudioContext }).webkitAudioContext;
+    if (!ACtx) {
       console.warn('Web Audio API not supported');
       return;
     }
 
-    const ctx = new AudioContext();
+    const ctx = new ACtx();
     audioContextRef.current = ctx;
 
     const loadAudio = async (url: string) => {
