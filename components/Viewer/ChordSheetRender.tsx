@@ -46,10 +46,8 @@ function getCurrentKey(song: SonglistItem): string | null {
   if (idx === -1) return song.originalKey;
   const newIdx = (idx + song.transposeSteps + 1200) % 12;
   const rawKey = CHROMATIC_SCALE[newIdx];
-  // Use flat spelling if original key was flat OR if target key conventionally uses flats
   const flatVersion = SHARP_TO_FLAT_DISPLAY[rawKey];
   if (flatVersion) {
-    // Keep flat if the original key was a flat key, or if the resulting key is a flat preference key
     const originalWasFlat = song.originalKey in FLAT_TO_SHARP || FLAT_PREFERENCE_KEYS.has(song.originalKey);
     if (originalWasFlat || FLAT_PREFERENCE_KEYS.has(flatVersion)) {
       return flatVersion;
@@ -127,11 +125,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
   function displayChord(raw: string): string {
     if (!raw) return '';
     const currentKey = getCurrentKey(song);
-    // BUG FIX #5: NNS must use the *current* (post-transpose) key as the tonic,
-    // not the originalKey. E.g. if song is in G and transposed +2 → A, NNS "1"
-    // must map to A, not G.
     if (isNNSActive && currentKey) {
-      // First transpose the raw chord to the current key, then convert to NNS
       const transposed = song.transposeSteps !== 0
         ? transposeChord(raw, song.transposeSteps)
         : raw;
@@ -150,18 +144,18 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
   const currentKey = getCurrentKey(song);
 
   return (
-    <div className="w-full relative p-5 sm:p-8 md:p-12 bg-white">
+    <div className="w-full relative p-5 sm:p-8 md:p-12" style={{ backgroundColor: 'var(--bg-card)' }}>
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 text-center font-mono relative z-10 border-b"
-        style={{ borderColor: '#f3f4f6' }}>
-        
+        style={{ borderColor: 'var(--border-subtle)' }}>
+
         {/* Reorder + Remove controls */}
         <div className="absolute left-0 top-0 flex flex-col gap-0.5">
           {index > 0 && (
             <button
               onClick={() => reorderSongs(index, index - 1)}
-              style={{ touchAction: 'manipulation' }}
-              className="p-2 text-gray-300 hover:text-[#007AFF] hover:bg-blue-50 rounded-full transition-colors active:scale-90"
+              style={{ touchAction: 'manipulation', color: 'var(--text-muted)' }}
+              className="p-2 rounded-full transition-colors active:scale-90"
               title="Move Up"
             >
               <ChevronUp size={14} />
@@ -170,8 +164,8 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
           {index < total - 1 && (
             <button
               onClick={() => reorderSongs(index, index + 1)}
-              style={{ touchAction: 'manipulation' }}
-              className="p-2 text-gray-300 hover:text-[#007AFF] hover:bg-blue-50 rounded-full transition-colors active:scale-90"
+              style={{ touchAction: 'manipulation', color: 'var(--text-muted)' }}
+              className="p-2 rounded-full transition-colors active:scale-90"
               title="Move Down"
             >
               <ChevronDown size={14} />
@@ -179,47 +173,47 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
           )}
         </div>
 
-        <button 
+        <button
           onClick={() => removeSong(song.listId)}
-          style={{ touchAction: 'manipulation' }}
-          className="absolute right-0 top-0 p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors active:scale-90"
+          style={{ touchAction: 'manipulation', color: 'var(--text-muted)' }}
+          className="p-2 rounded-full transition-colors active:scale-90 absolute right-0 top-0"
           title="Remove Song"
         >
           <X size={18} />
         </button>
 
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 text-black px-8">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 px-8" style={{ color: 'var(--text-primary)' }}>
           {song.title}
         </h1>
-        <p className="text-xs sm:text-sm mb-3 sm:mb-4 text-gray-500">{artistDisplay}</p>
-        
+        <p className="text-xs sm:text-sm mb-3 sm:mb-4" style={{ color: 'var(--text-secondary)' }}>{artistDisplay}</p>
+
         {/* Transpose Controls + Current Key Display */}
         <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
-          <div className="flex items-center bg-gray-50 border border-gray-200 rounded-full overflow-hidden shadow-sm">
-            <button 
+          <div className="flex items-center rounded-full overflow-hidden shadow-sm" style={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border-subtle)' }}>
+            <button
               onClick={() => setSongTranspose(song.listId, s => s - 1)}
-              style={{ touchAction: 'manipulation' }}
-              className="p-2.5 hover:bg-gray-200 text-gray-600 transition-colors active:bg-gray-300"
+              style={{ touchAction: 'manipulation', color: 'var(--text-secondary)' }}
+              className="p-2.5 hover:bg-[var(--border-subtle)] transition-colors active:bg-[var(--border-subtle)]"
             >
               <Minus size={13} />
             </button>
-            <span className="px-2 text-xs font-bold w-10 text-center text-blue-600">
+            <span className="px-2 text-xs font-bold w-10 text-center" style={{ color: 'var(--accent)' }}>
               {song.transposeSteps !== 0 ? (song.transposeSteps > 0 ? `+${song.transposeSteps}` : song.transposeSteps) : 'Key'}
             </span>
-            <button 
+            <button
               onClick={() => setSongTranspose(song.listId, s => s + 1)}
-              style={{ touchAction: 'manipulation' }}
-              className="p-2.5 hover:bg-gray-200 text-gray-600 transition-colors active:bg-gray-300"
+              style={{ touchAction: 'manipulation', color: 'var(--text-secondary)' }}
+              className="p-2.5 hover:bg-[var(--border-subtle)] transition-colors active:bg-[var(--border-subtle)]"
             >
               <Plus size={13} />
             </button>
           </div>
-          
+
           {/* Current Key Badge */}
           {currentKey && (
             <span
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{ backgroundColor: '#f0f7ff', color: '#007AFF' }}
+              style={{ backgroundColor: 'var(--accent-bg)', color: 'var(--accent)' }}
             >
               <span style={{ opacity: 0.6 }}>Key</span> {currentKey}
               {song.transposeSteps !== 0 && (
@@ -230,7 +224,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
 
           {isNNSActive && (
             <span className="inline-block px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{ backgroundColor: '#e8f0fe', color: '#007AFF' }}>
+              style={{ backgroundColor: 'var(--accent-bg)', color: 'var(--accent)' }}>
               NNS
             </span>
           )}
@@ -238,7 +232,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
       </div>
 
       {/* ── Sheet body ────────────────────────────────────────────────────── */}
-      <div className="font-mono text-xs sm:text-sm md:text-base relative z-10 text-black overflow-x-auto">
+      <div className="font-mono text-xs sm:text-sm md:text-base relative z-10 overflow-x-auto" style={{ color: 'var(--text-primary)' }}>
         {parsedLines.map((line, li) => {
 
           if (line.type === 'spacer') {
@@ -257,7 +251,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
                       return (
                         <span key={`c-${li}-${ti}`}
                           className="font-bold whitespace-pre flex-shrink-0"
-                          style={{ color: chord ? '#007AFF' : 'transparent', minWidth: `${minW}ch` }}>
+                          style={{ color: chord ? 'var(--accent)' : 'transparent', minWidth: `${minW}ch` }}>
                           {chord || ' '}
                         </span>
                       );
@@ -271,7 +265,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
                     return (
                       <span key={`l-${li}-${ti}`}
                         className="whitespace-pre flex-shrink-0"
-                        style={{ color: '#000000', minWidth: `${minW}ch` }}>
+                        style={{ color: 'var(--text-primary)', minWidth: `${minW}ch` }}>
                         {t.lyric || (chord ? ' ' : '')}
                       </span>
                     );
@@ -284,10 +278,10 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
           if (line.type === 'chord-over-lyric' && line.chords) {
             return (
               <div key={`col-${li}`} className="mb-1">
-                <div className="leading-tight font-bold whitespace-pre-wrap text-blue-500">
+                <div className="leading-tight font-bold whitespace-pre-wrap" style={{ color: 'var(--accent)' }}>
                   {line.chords.map((c, ci) => displayChord(c)).join('    ')}
                 </div>
-                <div className="leading-snug whitespace-pre-wrap text-black">
+                <div className="leading-snug whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
                   {line.lyric}
                 </div>
               </div>
@@ -297,7 +291,7 @@ export default function ChordSheetRender({ song, index, total }: { song: Songlis
           if (line.type === 'plain') {
             return (
               <div key={`pl-${li}`}
-                className="leading-snug mb-1 whitespace-pre-wrap text-gray-700">
+                className="leading-snug mb-1 whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
                 {line.lyric}
               </div>
             );

@@ -16,7 +16,10 @@ export default function Slider({ value, min, max, onChange, className = '' }: Sl
       max={max}
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className={`w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#007AFF] hover:accent-blue-600 transition-all ${className}`}
+      className={`w-full h-2 rounded-lg appearance-none cursor-pointer transition-all ${className}`}
+      style={{
+        backgroundColor: 'var(--border-subtle)',
+      }}
     />
   );
 }

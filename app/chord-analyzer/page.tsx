@@ -5,19 +5,15 @@ import Link from 'next/link';
 import {
   Upload, Loader2, Play, Pause,
   Music, Clock, Target, Hash,
-  XCircle, ChevronLeft,
+  XCircle, ChevronLeft, Moon, Sun,
 } from 'lucide-react';
 import type { AnalysisResultResponse, ChordSegment } from '@/lib/audio-analysis/types';
-
-// ─── Colour palette (matches existing Bord design) ────────────────────────────
-const BLUE = '#007AFF';
-const LIGHT_BG = '#f8f9fa';
+import { useThemeStore } from '@/store/themeStore';
 
 // ─── Chord Engine API (CORS is open — direct browser calls, no proxy needed) ──
 const ENGINE_BASE = 'https://jeremyszs-chord-engine.hf.space/api/v1';
 
 // ─── Chord label mapper: API "Root:quality" → display chord ───────────────────
-// API returns "C:maj", "A:min", "G:7", "F:maj7", "N" (silence), "X" (percussion)
 function formatChordLabel(label: string): string {
   if (label === 'N') return '—';
   if (label === 'X') return '×';
@@ -76,6 +72,8 @@ function validateAudioFile(file: File): string | null {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ChordAnalyzerPage() {
+  const { theme, toggleTheme } = useThemeStore();
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [phase, setPhase] = useState<'idle' | 'uploading' | 'processing' | 'completed' | 'failed'>('idle');
   const [progress, setProgress] = useState(0);
@@ -273,7 +271,7 @@ export default function ChordAnalyzerPage() {
     setActiveSegmentIdx(idx);
 
     rafRef.current = requestAnimationFrame(syncLoop);
-  }, []); // No deps — reads from refs only
+  }, []);
 
   const togglePlayback = useCallback(() => {
     if (!audioRef.current) return;
@@ -335,7 +333,7 @@ export default function ChordAnalyzerPage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen font-sans" style={{ backgroundColor: LIGHT_BG }}>
+    <div className="min-h-screen font-sans" style={{ backgroundColor: 'var(--bg-page)' }}>
       {/* ── Hidden audio element ── */}
       {audioUrl && (
         <audio
@@ -351,29 +349,32 @@ export default function ChordAnalyzerPage() {
 
       {/* ── Loading overlay ── */}
       {(phase === 'uploading' || phase === 'processing') && (
-        <div className="fixed inset-0 z-[100] bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center">
-          <Loader2 size={48} className="animate-spin mb-4" style={{ color: BLUE }} />
+        <div className="fixed inset-0 z-[100] backdrop-blur-sm flex flex-col items-center justify-center" style={{ backgroundColor: 'var(--bg-overlay)' }}>
+          <Loader2 size={48} className="animate-spin mb-4" style={{ color: 'var(--accent)' }} />
           {/* Progress bar */}
-          <div className="w-64 h-2 bg-gray-200 rounded-full overflow-hidden mb-3">
+          <div className="w-64 h-2 rounded-full overflow-hidden mb-3" style={{ backgroundColor: 'var(--border-subtle)' }}>
             <div
               className="h-full rounded-full transition-all duration-500 ease-out"
-              style={{ width: `${progress}%`, backgroundColor: BLUE }}
+              style={{ width: `${progress}%`, backgroundColor: 'var(--accent)' }}
             />
           </div>
-          <p className="text-gray-600 font-medium text-sm">{statusMsg}</p>
+          <p className="font-medium text-sm" style={{ color: 'var(--text-secondary)' }}>{statusMsg}</p>
           {phase === 'processing' && jobId && (
-            <p className="text-gray-400 text-xs mt-1 font-mono">Job: {jobId.slice(0, 8)}…</p>
+            <p className="text-xs mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>Job: {jobId.slice(0, 8)}…</p>
           )}
         </div>
       )}
 
       {/* ── Fixed top bar ── */}
-      <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <div
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md border-b"
+        style={{ backgroundColor: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+      >
         <div className="flex items-center gap-3">
           <Link
             href="/"
             style={{ touchAction: 'manipulation' }}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-white shadow-sm active:scale-95 transition-all text-gray-500 hover:text-[#007AFF] border border-gray-200"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-[var(--bg-card)] shadow-sm active:scale-95 transition-all text-[var(--text-secondary)] hover:text-[var(--accent)] border border-[var(--border-subtle)]"
             title="Back to Home"
           >
             <ChevronLeft size={18} />
@@ -387,20 +388,32 @@ export default function ChordAnalyzerPage() {
                 className="w-full h-full object-contain"
               />
             </Link>
-            <h1 className="text-sm font-bold text-gray-800">Bord</h1>
+            <h1 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Bord</h1>
           </div>
         </div>
 
-        {phase === 'completed' && (
+        <div className="flex items-center gap-2">
+          {/* Theme toggle */}
           <button
-            onClick={handleReset}
+            onClick={toggleTheme}
             style={{ touchAction: 'manipulation' }}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-500 hover:text-[#007AFF] active:scale-95 transition-all"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-[var(--bg-card)] shadow-sm active:scale-95 transition-all text-[var(--text-secondary)] hover:text-[var(--accent)] border border-[var(--border-subtle)]"
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           >
-            <Upload size={13} />
-            New File
+            {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
           </button>
-        )}
+
+          {phase === 'completed' && (
+            <button
+              onClick={handleReset}
+              style={{ touchAction: 'manipulation' }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--bg-card)] border border-[var(--border-subtle)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--accent)] active:scale-95 transition-all"
+            >
+              <Upload size={13} />
+              New File
+            </button>
+          )}
+        </div>
       </div>
 
       {/* ── Main content ── */}
@@ -411,14 +424,15 @@ export default function ChordAnalyzerPage() {
           <div className="space-y-6">
             {/* Error banner */}
             {phase === 'failed' && error && (
-              <div className="flex items-start gap-3 px-4 py-3 rounded-xl border bg-red-50 border-red-200 text-red-700 text-sm">
-                <XCircle size={18} className="shrink-0 mt-0.5 text-red-500" />
+              <div className="flex items-start gap-3 px-4 py-3 rounded-xl border" style={{ backgroundColor: 'var(--red-bg)', borderColor: 'var(--red-border)', color: 'var(--red)' }}>
+                <XCircle size={18} className="shrink-0 mt-0.5" />
                 <div>
                   <p className="font-semibold">Analysis failed</p>
-                  <p className="text-red-600/80">{error}</p>
+                  <p style={{ opacity: 0.8 }}>{error}</p>
                   <button
                     onClick={handleReset}
-                    className="mt-2 text-xs font-semibold text-red-600 hover:text-red-700 underline"
+                    className="mt-2 text-xs font-semibold underline"
+                    style={{ color: 'var(--red)' }}
                   >
                     Try again
                   </button>
@@ -431,12 +445,16 @@ export default function ChordAnalyzerPage() {
               onDrop={handleDrop}
               onDragOver={handleDragOver}
               onClick={() => fileInputRef.current?.click()}
-              style={{ touchAction: 'manipulation' }}
+              style={{
+                touchAction: 'manipulation',
+                backgroundColor: audioFile ? 'var(--accent-bg)' : 'transparent',
+                borderColor: audioFile ? 'var(--accent)' : 'var(--border-subtle)',
+              }}
               className={
                 `relative flex flex-col items-center justify-center w-full border-2 border-dashed rounded-2xl p-10 sm:p-16 cursor-pointer transition-all group ${
                   audioFile
-                    ? 'bg-blue-50/30 border-blue-300'
-                    : 'border-gray-300 hover:bg-blue-50/30 hover:border-blue-300'
+                    ? 'border-blue-300'
+                    : 'hover:bg-blue-50/30 hover:border-blue-300'
                 }`
               }
             >
@@ -452,19 +470,24 @@ export default function ChordAnalyzerPage() {
                 <>
                   <div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ backgroundColor: '#007AFF' }}
+                    style={{ backgroundColor: 'var(--accent)' }}
                   >
                     <Music size={24} color="#fff" />
                   </div>
-                  <p className="text-base font-semibold text-gray-800 mb-1">{audioFile.name}</p>
-                  <p className="text-xs text-gray-400 mb-4">
+                  <p className="text-base font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>{audioFile.name}</p>
+                  <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
                     {(audioFile.size / (1024 * 1024)).toFixed(1)} MB
                   </p>
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                      style={{ touchAction: 'manipulation' }}
-                      className="px-4 py-2 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 transition-all active:scale-95"
+                      style={{
+                        touchAction: 'manipulation',
+                        backgroundColor: 'var(--btn-bg)',
+                        border: '1px solid var(--btn-border)',
+                        color: 'var(--btn-text)',
+                      }}
+                      className="px-4 py-2 rounded-full text-xs font-semibold transition-all active:scale-95"
                     >
                       Change File
                     </button>
@@ -472,10 +495,11 @@ export default function ChordAnalyzerPage() {
                       onClick={(e) => { e.stopPropagation(); startAnalysis(); }}
                       style={{
                         touchAction: 'manipulation',
-                        backgroundColor: '#007AFF',
-                        boxShadow: '0 4px 14px rgba(0,122,255,0.4)',
+                        backgroundColor: 'var(--accent)',
+                        boxShadow: '0 4px 14px var(--accent-glow)',
+                        color: 'white',
                       }}
-                      className="px-5 py-2 rounded-full text-xs font-bold text-white active:scale-95 transition-transform"
+                      className="px-5 py-2 rounded-full text-xs font-bold active:scale-95 transition-transform"
                     >
                       Analyze
                     </button>
@@ -485,18 +509,18 @@ export default function ChordAnalyzerPage() {
                 <>
                   <div
                     className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4"
-                    style={{ backgroundColor: '#007AFF' }}
+                    style={{ backgroundColor: 'var(--accent)' }}
                   >
                     <Upload size={22} color="#fff" />
                   </div>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">
+                  <p className="text-sm font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>
                     Drop audio file or tap to browse
                   </p>
-                  <p className="text-xs text-gray-400 mb-4">
+                  <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
                     MP3, WAV, FLAC, OGG, or M4A · Max 50MB
                   </p>
                   <span className="px-4 py-1.5 rounded-full text-xs font-semibold text-white"
-                    style={{ backgroundColor: '#007AFF' }}>
+                    style={{ backgroundColor: 'var(--accent)' }}>
                     Select File
                   </span>
                 </>
@@ -510,11 +534,11 @@ export default function ChordAnalyzerPage() {
                 { icon: Target, title: 'Key & Tempo', desc: 'Detects song key, BPM, and chord progression' },
                 { icon: Clock, title: 'Timed Segments', desc: 'Every chord aligned to its exact timestamp' },
               ].map((tip, i) => (
-                <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white border border-gray-100 shadow-sm">
-                  <tip.icon size={16} className="shrink-0 mt-0.5" style={{ color: BLUE }} />
+                <div key={i} className="flex items-start gap-3 p-3 rounded-xl shadow-sm card">
+                  <tip.icon size={16} className="shrink-0 mt-0.5" style={{ color: 'var(--accent)' }} />
                   <div>
-                    <p className="text-xs font-semibold text-gray-700">{tip.title}</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{tip.desc}</p>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{tip.title}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{tip.desc}</p>
                   </div>
                 </div>
               ))}
@@ -534,38 +558,36 @@ export default function ChordAnalyzerPage() {
                 { label: 'Duration', value: fmtTime(result.duration_seconds), icon: Clock },
                 { label: 'Chords', value: `${result.chord_count} detected`, icon: Target },
               ].map((item, i) => (
-                <div key={i}
-                  className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl bg-white border border-gray-100 shadow-sm"
-                >
-                  <item.icon size={14} className="mb-1.5" style={{ color: BLUE }} />
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+                <div key={i} className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl shadow-sm card">
+                  <item.icon size={14} className="mb-1.5" style={{ color: 'var(--accent)' }} />
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-0.5" style={{ color: 'var(--text-muted)' }}>
                     {item.label}
                   </p>
-                  <p className="text-sm sm:text-base font-bold text-gray-800">{item.value}</p>
+                  <p className="text-sm sm:text-base font-bold" style={{ color: 'var(--text-primary)' }}>{item.value}</p>
                 </div>
               ))}
             </div>
 
             {/* ── Progression ── */}
             {result.progression && (
-              <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-sm text-center">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Progression</p>
-                <p className="text-xl sm:text-2xl font-black tracking-wide" style={{ color: BLUE }}>
+              <div className="p-4 rounded-xl card text-center">
+                <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Progression</p>
+                <p className="text-xl sm:text-2xl font-black tracking-wide" style={{ color: 'var(--accent)' }}>
                   {result.progression}
                 </p>
               </div>
             )}
 
             {/* ── Audio Player ── */}
-            <div className="p-4 sm:p-5 rounded-xl bg-white border border-gray-100 shadow-sm">
+            <div className="p-4 sm:p-5 rounded-xl card">
               {/* Play/pause + time */}
               <div className="flex items-center gap-3 mb-4">
                 <button
                   onClick={togglePlayback}
                   style={{
                     touchAction: 'manipulation',
-                    backgroundColor: isPlaying ? BLUE : '#007AFF',
-                    boxShadow: '0 4px 14px rgba(0,122,255,0.4)',
+                    backgroundColor: 'var(--accent)',
+                    boxShadow: '0 4px 14px var(--accent-glow)',
                   }}
                   className="flex items-center justify-center w-10 h-10 rounded-full shrink-0 text-white active:scale-90 transition-transform"
                 >
@@ -574,7 +596,9 @@ export default function ChordAnalyzerPage() {
 
                 {/* Progress bar */}
                 <div className="flex-1 relative">
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden cursor-pointer"
+                  <div
+                    className="h-1.5 rounded-full overflow-hidden cursor-pointer"
+                    style={{ backgroundColor: 'var(--border-subtle)' }}
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const frac = (e.clientX - rect.left) / rect.width;
@@ -583,28 +607,28 @@ export default function ChordAnalyzerPage() {
                   >
                     <div
                       className="h-full rounded-full transition-all duration-100"
-                      style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, backgroundColor: BLUE }}
+                      style={{ width: `${duration > 0 ? (currentTime / duration) * 100 : 0}%`, backgroundColor: 'var(--accent)' }}
                     />
                   </div>
                   {/* Timestamps */}
                   <div className="flex justify-between mt-1">
-                    <span className="text-[10px] font-mono text-gray-400">{fmtTime(currentTime)}</span>
-                    <span className="text-[10px] font-mono text-gray-400">{fmtTime(duration)}</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{fmtTime(currentTime)}</span>
+                    <span className="text-[10px] font-mono" style={{ color: 'var(--text-muted)' }}>{fmtTime(duration)}</span>
                   </div>
                 </div>
               </div>
 
               {/* ── Current chord display ── */}
               {activeSegmentIdx >= 0 && result.segments[activeSegmentIdx] && (
-                <div className="text-center py-3 border-t border-gray-100">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Current Chord</p>
+                <div className="text-center py-3 border-t" style={{ borderColor: 'var(--border-subtle)' }}>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: 'var(--text-muted)' }}>Current Chord</p>
                   <p
                     className="text-3xl sm:text-4xl font-black leading-none"
-                    style={{ color: BLUE }}
+                    style={{ color: 'var(--accent)' }}
                   >
                     {formatChordLabel(result.segments[activeSegmentIdx].chord)}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1 font-mono">
+                  <p className="text-xs mt-1 font-mono" style={{ color: 'var(--text-muted)' }}>
                     {result.segments[activeSegmentIdx].roman} · {fmtTime(result.segments[activeSegmentIdx].start)} – {fmtTime(result.segments[activeSegmentIdx].end)}
                     · {Math.round(result.segments[activeSegmentIdx].confidence * 100)}% confidence
                   </p>
@@ -614,7 +638,7 @@ export default function ChordAnalyzerPage() {
 
             {/* ── Chord Timeline ── */}
             <div>
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2 flex items-center gap-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-2" style={{ color: 'var(--text-muted)' }}>
                 <Hash size={12} />
                 Chord Timeline
               </h2>
@@ -628,8 +652,8 @@ export default function ChordAnalyzerPage() {
                       onClick={() => handleSegmentClick(seg)}
                       style={{
                         touchAction: 'manipulation',
-                        backgroundColor: isActive ? `${BLUE}10` : '#ffffff',
-                        borderColor: isActive ? BLUE : '#e5e7eb',
+                        backgroundColor: isActive ? 'var(--accent-bg)' : 'var(--bg-card)',
+                        borderColor: isActive ? 'var(--accent)' : 'var(--border-subtle)',
                       }}
                       className={`w-full flex items-center gap-3 sm:gap-4 p-3 rounded-xl border transition-all active:scale-[0.99] text-left ${
                         isActive ? 'shadow-sm' : 'hover:border-blue-200 hover:bg-blue-50/30'
@@ -648,38 +672,39 @@ export default function ChordAnalyzerPage() {
                       />
 
                       {/* Timestamp */}
-                      <span className="text-[11px] font-mono text-gray-400 w-16 shrink-0">
+                      <span className="text-[11px] font-mono w-16 shrink-0" style={{ color: 'var(--text-muted)' }}>
                         {fmtTime(seg.start)}
                       </span>
 
                       {/* Chord */}
                       <span
                         className={`font-bold shrink-0 ${isActive ? 'text-base' : 'text-sm'}`}
-                        style={{ color: isActive ? BLUE : '#1f2937', minWidth: '4ch' }}
+                        style={{ color: isActive ? 'var(--accent)' : 'var(--text-primary)', minWidth: '4ch' }}
                       >
                         {formatChordLabel(seg.chord)}
                       </span>
 
                       {/* Roman numeral */}
-                      <span className={`text-xs font-mono ${isActive ? 'text-blue-500 font-bold' : 'text-gray-400'}`}>
+                      <span className={`text-xs font-mono ${isActive ? 'font-bold' : ''}`}
+                        style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}>
                         {seg.roman}
                       </span>
 
                       {/* Duration bar */}
                       <div className="flex-1 hidden sm:block">
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--border-subtle)' }}>
                           <div
                             className="h-full rounded-full"
                             style={{
                               width: `${Math.max(3, (seg.duration / result.duration_seconds) * 100)}%`,
-                              backgroundColor: isActive ? BLUE : '#d1d5db',
+                              backgroundColor: isActive ? 'var(--accent)' : '#d1d5db',
                             }}
                           />
                         </div>
                       </div>
 
                       {/* Duration text — shown only when bar is hidden */}
-                      <span className="text-[10px] text-gray-400 font-mono shrink-0 sm:hidden">
+                      <span className="text-[10px] font-mono shrink-0 sm:hidden" style={{ color: 'var(--text-muted)' }}>
                         {seg.duration.toFixed(1)}s
                       </span>
                     </button>
@@ -689,7 +714,7 @@ export default function ChordAnalyzerPage() {
             </div>
 
             {/* ── Processing info (subtle) ── */}
-            <p className="text-center text-[10px] text-gray-300 pt-2">
+            <p className="text-center text-[10px] pt-2" style={{ color: 'var(--text-muted)' }}>
               {result.audio_filename} · Processed in {result.processing_time_seconds.toFixed(1)}s
             </p>
           </div>

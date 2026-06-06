@@ -81,7 +81,6 @@ export default function ControlPanel() {
 
     const state = useViewerStore.getState();
 
-    // Create a ultra-lightweight version of the setlist for the URL
     const lightweightSongs = state.songs.map(s => ({
       title: s.title,
       artist: s.artist,
@@ -98,7 +97,6 @@ export default function ControlPanel() {
     const compressed = LZString.compressToEncodedURIComponent(jsonString);
     const url = `${window.location.origin}${window.location.pathname}#data=${compressed}`;
 
-    // Robust clipboard copy utility
     const copyToClipboard = async (text: string) => {
       try {
         if (!document.hasFocus()) window.focus();
@@ -133,8 +131,6 @@ export default function ControlPanel() {
     setTimeout(() => setShowSaveToast(false), 3000);
   };
 
-  const btn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] text-black hover:text-[#007AFF] transition-colors border border-gray-100 active:scale-90 shrink-0";
-  const activBtn = "flex items-center justify-center p-2.5 sm:p-3 rounded-full bg-[#007AFF] text-white shadow-[0_4px_12px_rgba(0,122,255,0.3)] transition-colors border border-[#007AFF] active:scale-90 shrink-0";
   const touchStyle = { touchAction: 'manipulation' as const };
   const iconSize = 16;
 
@@ -148,18 +144,22 @@ export default function ControlPanel() {
         transition={{ duration: 0.3 }}
         className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2 w-[calc(100vw-16px)] sm:w-max sm:max-w-[calc(100vw-32px)]"
       >
-        {/* Scroll speed popover (mobile-friendly) */}
+        {/* Scroll speed popover */}
         <AnimatePresence>
           {showScrollSlider && (
             <motion.div
               initial={{ opacity: 0, y: 8, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
-              className="w-full max-w-xs bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl p-4"
+              className="w-full max-w-xs backdrop-blur-md border rounded-2xl shadow-xl p-4"
+              style={{
+                backgroundColor: 'var(--bg-overlay)',
+                borderColor: 'var(--border-subtle)',
+              }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Scroll Speed</span>
-                <span className="text-xs font-bold text-[#007AFF]">{scrollSpeed}</span>
+                <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Scroll Speed</span>
+                <span className="text-xs font-bold" style={{ color: 'var(--accent)' }}>{scrollSpeed}</span>
               </div>
               <Slider min={1} max={100} value={scrollSpeed} onChange={setScrollSpeed} />
             </motion.div>
@@ -170,94 +170,97 @@ export default function ControlPanel() {
 
         {/* Main pill */}
         <div
-          className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 bg-white/90 backdrop-blur-md border border-gray-100 rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
-          style={{ justifyContent: 'safe center' }}
+          className="flex items-center gap-1.5 sm:gap-2 px-3 py-2.5 backdrop-blur-md border rounded-full shadow-xl w-full justify-start sm:justify-center overflow-x-auto touch-pan-x [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+          style={{
+            backgroundColor: 'var(--bg-overlay)',
+            borderColor: 'var(--border-subtle)',
+          }}
         >
           {/* MIDI */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleMidi}
-            className={isMidiEnabled ? activBtn : btn} title="MIDI Detector">
+            className={isMidiEnabled ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="MIDI Detector">
             <Piano size={iconSize} />
           </motion.button>
 
           {/* NNS */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleNNS}
-            className={isNNSActive ? activBtn : btn} title="Nashville Number System">
+            className={isNNSActive ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="Nashville Number System">
             <Hash size={iconSize} />
           </motion.button>
 
           {/* Draw */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleDrawingMode}
-            className={isDrawingMode ? activBtn : btn} title="Draw Mode">
+            className={isDrawingMode ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="Draw Mode">
             <PenTool size={iconSize} />
           </motion.button>
 
           {isDrawingMode && (
             <motion.button style={touchStyle} initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }}
               whileTap={{ scale: 0.88 }} onClick={undoAnnotation} disabled={!currentAnnotation}
-              className={`${btn} ${!currentAnnotation ? 'opacity-40' : ''}`} title="Undo">
+              className={`btn-ghost p-2.5 sm:p-3 rounded-full ${!currentAnnotation ? 'opacity-40' : ''}`} title="Undo">
               <Undo2 size={iconSize} />
             </motion.button>
           )}
 
-          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+          <div className="w-px h-6 flex-shrink-0" style={{ backgroundColor: 'var(--border-subtle)' }} />
 
           {/* Setlist Navigator */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={toggleSetlistNav}
-            className={showSetlistNav ? activBtn : btn} title="Setlist Navigation">
+            className={showSetlistNav ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="Setlist Navigation">
             <ListMusic size={iconSize} />
           </motion.button>
 
           {/* Metronome */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }}
             onClick={() => { setShowMetronome(s => !s); setShowScrollSlider(false); }}
-            className={showMetronome ? activBtn : btn} title="Metronome">
+            className={showMetronome ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="Metronome">
             <Timer size={iconSize} />
           </motion.button>
 
           {/* Play / Scroll */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={togglePlaying}
-            className={isPlaying ? activBtn : btn} title={isPlaying ? 'Pause' : 'Auto-scroll'}>
+            className={isPlaying ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title={isPlaying ? 'Pause' : 'Auto-scroll'}>
             {isPlaying ? <Pause size={iconSize} /> : <Play size={iconSize} className="ml-0.5" />}
           </motion.button>
 
           {/* Scroll slider toggle */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }}
             onClick={() => { setShowScrollSlider(s => !s); setShowMetronome(false); }}
-            className={showScrollSlider ? activBtn : btn} title="Scroll Speed">
+            className={showScrollSlider ? 'btn-active p-2.5 sm:p-3 rounded-full' : 'btn-ghost p-2.5 sm:p-3 rounded-full'} title="Scroll Speed">
             <SlidersHorizontal size={iconSize} />
           </motion.button>
 
-          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+          <div className="w-px h-6 flex-shrink-0" style={{ backgroundColor: 'var(--border-subtle)' }} />
 
           {/* Reset */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={resetView}
-            className={btn} title="Reset Transpositions">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full" title="Reset Transpositions">
             <RotateCcw size={iconSize} />
           </motion.button>
 
           {/* Clear */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={clearSongs}
-            className={`${btn} hover:text-red-500`} title="Clear Setlist">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full hover:text-[var(--red)]" title="Clear Setlist">
             <Trash2 size={iconSize} />
           </motion.button>
 
-          <div className="w-px h-6 bg-gray-200 flex-shrink-0" />
+          <div className="w-px h-6 flex-shrink-0" style={{ backgroundColor: 'var(--border-subtle)' }} />
 
           {/* Save */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleSaveToLibrary}
-            className={btn} title="Save to Library">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full" title="Save to Library">
             <Save size={iconSize} />
           </motion.button>
 
           {/* Share Link */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleShareLink}
-            className={btn} title="Share Link">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full" title="Share Link">
             <LinkIcon size={iconSize} />
           </motion.button>
 
           {/* Export .bord */}
           <motion.button style={touchStyle} whileTap={{ scale: 0.88 }} onClick={handleExportBord}
-            className={btn} title="Export .bord">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full" title="Export .bord">
             <Download size={iconSize} />
           </motion.button>
 
@@ -267,7 +270,7 @@ export default function ControlPanel() {
               const { exportToPdf } = await import('@/lib/export-engine');
               exportToPdf();
             }}
-            className={btn} title="Export PDF">
+            className="btn-ghost p-2.5 sm:p-3 rounded-full" title="Export PDF">
             <FileText size={iconSize} />
           </motion.button>
         </div>
@@ -279,9 +282,9 @@ export default function ControlPanel() {
           initial={{ opacity: 0, y: 40, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="fixed bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 bg-gray-900 text-white rounded-full shadow-2xl z-50 pointer-events-none"
+          className="fixed bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 rounded-full shadow-2xl z-50 pointer-events-none toast"
         >
-          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--green)' }}>
             <svg width="14" height="10" viewBox="0 0 14 10" fill="none">
               <path d="M1 5L4.5 8.5L12.5 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -296,10 +299,10 @@ export default function ControlPanel() {
           initial={{ opacity: 0, y: 40, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, scale: 0.9 }}
-          className="fixed bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 bg-gray-900 text-white rounded-full shadow-2xl z-50 pointer-events-none"
+          className="fixed bottom-28 left-1/2 -translate-x-1/2 flex items-center gap-3 px-5 py-3 rounded-full shadow-2xl z-50 pointer-events-none toast"
         >
-          <div className="w-6 h-6 rounded-full bg-white flex items-center justify-center">
-            <LinkIcon size={14} className="text-[#007AFF]" />
+          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <LinkIcon size={14} style={{ color: 'var(--accent)' }} />
           </div>
           <span className="font-medium text-sm whitespace-nowrap">Share Link Copied!</span>
         </motion.div>

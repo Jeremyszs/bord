@@ -6,15 +6,13 @@ import { X, Music2, Info } from 'lucide-react';
 import { useMidiStore } from '@/store/midiStore';
 
 // ─── Full 88-Key Piano Layout ──────────────────────────────────────────────────
-// Standard 88-key piano: A0 (MIDI 21) → C8 (MIDI 108)
 const START_MIDI = 21;  // A0
 const END_MIDI = 108;   // C8
 
-const BLACK_OFFSETS = new Set([1, 3, 6, 8, 10]); // C#, D#, F#, G#, A#
+const BLACK_OFFSETS = new Set([1, 3, 6, 8, 10]);
 
-// Fixed pixel widths — narrow enough to show useful range, wide enough to click
-const WHITE_KEY_WIDTH = 24; // px
-const BLACK_KEY_WIDTH = 15; // px
+const WHITE_KEY_WIDTH = 24;
+const BLACK_KEY_WIDTH = 15;
 const BLACK_KEY_HEIGHT_RATIO = 0.62;
 
 interface KeyInfo {
@@ -36,7 +34,6 @@ function midiToName(midi: number): string {
   return `${names[midi % 12]}${octave}`;
 }
 
-// ─── Clickable Virtual Piano ───────────────────────────────────────────────────
 function VisualPiano({
   activeNotes,
   onNotePress,
@@ -83,10 +80,8 @@ function VisualPiano({
     [onNoteRelease]
   );
 
-  // Scroll the piano to show the C4 area on mount (middle of keyboard)
   const scrollRef = useCallback((node: HTMLDivElement | null) => {
     if (!node) return;
-    // C4 = MIDI 60; white key index among A0..C4 ≈ position to center
     const c4Left = layout.whitePositions.get(60) ?? 0;
     const viewWidth = node.clientWidth;
     node.scrollLeft = Math.max(0, c4Left - viewWidth / 2);
@@ -103,7 +98,6 @@ function VisualPiano({
         className="relative shrink-0"
         style={{ width: layout.totalWidth, height: '100%', userSelect: 'none' }}
       >
-        {/* White keys */}
         {whiteKeys.map((k) => {
           const left = layout.whitePositions.get(k.midi)!;
           const active = activeNotes.has(k.midi);
@@ -114,8 +108,8 @@ function VisualPiano({
               title={midiToName(k.midi)}
               className={`absolute top-0 rounded-b-md border cursor-pointer select-none ${
                 active
-                  ? 'bg-[#007AFF] border-[#0055cc] shadow-inner'
-                  : 'bg-white border-gray-300 hover:bg-blue-50'
+                  ? 'shadow-inner'
+                  : 'hover:bg-blue-50'
               }`}
               style={{
                 left,
@@ -123,6 +117,8 @@ function VisualPiano({
                 height: '100%',
                 zIndex: 1,
                 transition: 'none',
+                backgroundColor: active ? 'var(--accent)' : 'var(--piano-white)',
+                borderColor: active ? 'var(--accent)' : 'var(--border-subtle)',
               }}
               onPointerDown={(e) => handlePointerDown(k.midi, e)}
               onPointerUp={(e) => handlePointerUp(k.midi, e)}
@@ -130,8 +126,9 @@ function VisualPiano({
               {isC && (
                 <span
                   className={`absolute bottom-1 left-0 right-0 text-center text-[7px] font-medium pointer-events-none ${
-                    active ? 'text-white/70' : 'text-gray-300'
+                    active ? 'text-white/70' : ''
                   }`}
+                  style={{ color: active ? 'rgba(255,255,255,0.7)' : 'var(--text-muted)' }}
                 >
                   {midiToName(k.midi)}
                 </span>
@@ -140,7 +137,6 @@ function VisualPiano({
           );
         })}
 
-        {/* Black keys */}
         {keys
           .filter((k) => k.isBlack)
           .map((k) => {
@@ -151,7 +147,7 @@ function VisualPiano({
                 key={k.midi}
                 title={midiToName(k.midi)}
                 className={`absolute top-0 rounded-b cursor-pointer select-none ${
-                  active ? 'bg-[#007AFF]' : 'bg-[#1c1c1e] hover:bg-gray-700'
+                  active ? '' : 'hover:opacity-80'
                 }`}
                 style={{
                   left,
@@ -159,6 +155,7 @@ function VisualPiano({
                   height: `${BLACK_KEY_HEIGHT_RATIO * 100}%`,
                   zIndex: 2,
                   transition: 'none',
+                  backgroundColor: active ? 'var(--accent)' : 'var(--piano-black)',
                 }}
                 onPointerDown={(e) => handlePointerDown(k.midi, e)}
                 onPointerUp={(e) => handlePointerUp(k.midi, e)}
@@ -191,13 +188,7 @@ export default function MidiPianoWindow() {
   );
 
   const handleResizeStop = useCallback(
-    (
-      _e: unknown,
-      _dir: unknown,
-      ref: HTMLElement,
-      _delta: unknown,
-      pos: { x: number; y: number }
-    ) => {
+    (_e: unknown, _dir: unknown, ref: HTMLElement, _delta: unknown, pos: { x: number; y: number }) => {
       setWindowRect({
         width: parseInt(ref.style.width),
         height: parseInt(ref.style.height),
@@ -214,8 +205,6 @@ export default function MidiPianoWindow() {
 
   return (
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999 }}>
-      {/* BUG FIX #2: Use `position` prop (not `default`) so the window respects
-          the persisted windowRect on every open, not just the first mount. */}
       <Rnd
         position={{ x: windowRect.x, y: windowRect.y }}
         size={{ width: windowRect.width, height: windowRect.height }}
@@ -233,110 +222,131 @@ export default function MidiPianoWindow() {
         onResizeStop={handleResizeStop}
         style={{ pointerEvents: 'auto' }}
       >
-      <div
-        className="flex flex-col w-full h-full rounded-2xl overflow-hidden border border-gray-200/80 shadow-2xl"
-        style={{
-          background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          // BUG FIX #3: Set container-type so cqw units work for chord font-size
-          containerType: 'inline-size',
-        }}
-      >
-        {/* ── Title Bar ── */}
-        <div className="midi-drag-handle flex items-center justify-between px-4 py-2 bg-white/80 border-b border-gray-100 cursor-grab active:cursor-grabbing select-none shrink-0">
-          <div className="flex items-center gap-2">
-            <Music2 size={13} className="text-[#007AFF]" />
-            <span className="text-xs font-semibold text-gray-600 tracking-widest uppercase">
-              MIDI Detector
-            </span>
-            <span
-              className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
-                isMidiEnabled && hasMidi
-                  ? 'bg-green-50 text-green-600'
-                  : 'bg-gray-100 text-gray-400'
-              }`}
-            >
-              <span
-                className={`w-1.5 h-1.5 rounded-full ${
-                  isMidiEnabled && hasMidi ? 'bg-green-500' : 'bg-gray-300'
-                }`}
-              />
-              {isMidiEnabled && hasMidi ? 'HW Connected' : 'Virtual'}
-            </span>
-          </div>
-          <button
-            onClick={closePianoDisplay}
-            className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
-            style={{ touchAction: 'manipulation' }}
-            title="Close"
-          >
-            <X size={12} />
-          </button>
-        </div>
-
-        {/* ── Info banners ── */}
-        {!hasMidi && (
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-50 border-b border-amber-100 text-[10px] text-amber-600 font-medium shrink-0">
-            <Info size={10} />
-            Web MIDI not supported in this browser. Using virtual keyboard only.
-          </div>
-        )}
-        {hasMidi && !isMidiEnabled && (
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-50 border-b border-blue-100 text-[10px] text-blue-500 font-medium shrink-0">
-            <Info size={10} />
-            Click keys to test chords. Plug in a MIDI controller and re-enable for hardware input.
-          </div>
-        )}
-
-        {/* ── Chord Display ── */}
         <div
-          className="flex items-center justify-center px-4 shrink-0 border-b border-gray-100 bg-white/50"
-          style={{ minHeight: 52 }}
+          className="flex flex-col w-full h-full rounded-2xl overflow-hidden border shadow-2xl"
+          style={{
+            backgroundColor: 'var(--bg-overlay)',
+            borderColor: 'var(--border-subtle)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            containerType: 'inline-size',
+          }}
         >
-          {detectedChord ? (
-            <span
-              className="font-black text-[#007AFF] leading-none"
-              style={{
-                fontFamily: '"SF Mono", "JetBrains Mono", "Fira Code", Menlo, monospace',
-                // BUG FIX #3: Fall back to clamp with vw since cqw requires container-type
-                fontSize: 'clamp(22px, 5cqw, 42px)',
-                letterSpacing: '-0.03em',
-              }}
+          {/* ── Title Bar ── */}
+          <div className="midi-drag-handle flex items-center justify-between px-4 py-2 border-b cursor-grab active:cursor-grabbing select-none shrink-0"
+            style={{ backgroundColor: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}>
+            <div className="flex items-center gap-2">
+              <Music2 size={13} style={{ color: 'var(--accent)' }} />
+              <span className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--text-secondary)' }}>
+                MIDI Detector
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full ${
+                  isMidiEnabled && hasMidi
+                    ? 'text-green-600'
+                    : ''
+                }`}
+                style={{
+                  backgroundColor: isMidiEnabled && hasMidi ? 'var(--green-bg)' : 'var(--bg-elevated)',
+                  color: isMidiEnabled && hasMidi ? 'var(--green)' : 'var(--text-muted)',
+                }}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full`}
+                  style={{
+                    backgroundColor: isMidiEnabled && hasMidi ? 'var(--green)' : 'var(--text-muted)',
+                  }}
+                />
+                {isMidiEnabled && hasMidi ? 'HW Connected' : 'Virtual'}
+              </span>
+            </div>
+            <button
+              onClick={closePianoDisplay}
+              className="flex items-center justify-center w-5 h-5 rounded-full hover:bg-red-100 transition-colors"
+              style={{ touchAction: 'manipulation', color: 'var(--text-muted)' }}
+              title="Close"
             >
-              {detectedChord}
-            </span>
-          ) : (
-            <span className="text-sm text-gray-300 font-medium">
-              Click keys or play on your MIDI controller…
-            </span>
-          )}
-        </div>
+              <X size={12} />
+            </button>
+          </div>
 
-        {/* ── Piano Keys ── */}
-        <div className="flex-1 px-3 py-3 min-h-0 bg-gray-50/50">
-          <div className="h-full rounded-xl overflow-hidden border border-gray-200 bg-gray-100 shadow-inner">
-            <div className="h-full p-2">
-              <VisualPiano
-                activeNotes={activeNotes}
-                onNotePress={pressVirtualNote}
-                onNoteRelease={releaseVirtualNote}
-                onReleaseAll={releaseAllVirtualNotes}
-              />
+          {/* ── Info banners ── */}
+          {!hasMidi && (
+            <div className="flex items-center gap-1.5 px-3 py-1 border-b text-[10px] font-medium shrink-0"
+              style={{
+                backgroundColor: 'var(--amber-bg)',
+                borderColor: 'var(--amber-border)',
+                color: '#d97706',
+              }}>
+              <Info size={10} />
+              Web MIDI not supported in this browser. Using virtual keyboard only.
+            </div>
+          )}
+          {hasMidi && !isMidiEnabled && (
+            <div className="flex items-center gap-1.5 px-3 py-1 border-b text-[10px] font-medium shrink-0"
+              style={{
+                backgroundColor: 'var(--accent-bg)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--accent)',
+              }}>
+              <Info size={10} />
+              Click keys to test chords. Plug in a MIDI controller and re-enable for hardware input.
+            </div>
+          )}
+
+          {/* ── Chord Display ── */}
+          <div
+            className="flex items-center justify-center px-4 shrink-0 border-b"
+            style={{ minHeight: 52, backgroundColor: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+          >
+            {detectedChord ? (
+              <span
+                className="font-black leading-none"
+                style={{
+                  color: 'var(--accent)',
+                  fontFamily: '"SF Mono", "JetBrains Mono", "Fira Code", Menlo, monospace',
+                  fontSize: 'clamp(22px, 5cqw, 42px)',
+                  letterSpacing: '-0.03em',
+                }}
+              >
+                {detectedChord}
+              </span>
+            ) : (
+              <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>
+                Click keys or play on your MIDI controller…
+              </span>
+            )}
+          </div>
+
+          {/* ── Piano Keys ── */}
+          <div className="flex-1 px-3 py-3 min-h-0" style={{ backgroundColor: 'var(--bg-elevated)' }}>
+            <div className="h-full rounded-xl overflow-hidden border shadow-inner"
+              style={{ backgroundColor: 'var(--bg-elevated)', borderColor: 'var(--border-subtle)' }}>
+              <div className="h-full p-2">
+                <VisualPiano
+                  activeNotes={activeNotes}
+                  onNotePress={pressVirtualNote}
+                  onNoteRelease={releaseVirtualNote}
+                  onReleaseAll={releaseAllVirtualNotes}
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* ── Footer ── */}
-        <div className="flex items-center justify-between px-4 py-1.5 border-t border-gray-100 bg-white/60 shrink-0">
-          <span className="text-[10px] text-gray-400">
-            Full 88-key piano · A0 – C8 · Scroll to navigate
-          </span>
-          <span className="text-[10px] text-gray-400">
-            Chord detection: all 128 MIDI notes
-          </span>
+          {/* ── Footer ── */}
+          <div className="flex items-center justify-between px-4 py-1.5 border-t shrink-0"
+            style={{
+              backgroundColor: 'var(--bg-overlay)',
+              borderColor: 'var(--border-subtle)',
+            }}>
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              Full 88-key piano · A0 – C8 · Scroll to navigate
+            </span>
+            <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+              Chord detection: all 128 MIDI notes
+            </span>
+          </div>
         </div>
-      </div>
       </Rnd>
     </div>
   );

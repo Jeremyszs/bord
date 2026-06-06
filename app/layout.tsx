@@ -3,8 +3,8 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ["latin"], 
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
   variable: "--font-jetbrains-mono",
 });
 
@@ -18,12 +18,10 @@ export const metadata: Metadata = {
 };
 
 // ── Viewport (must be a separate export in Next.js App Router) ────────────────
-// Without this, mobile browsers render at 980px and scale down,
-// causing touch coordinates to not match visual element positions.
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 5, // Allow pinch-zoom for readability on chord sheets
+  maximumScale: 5,
 };
 
 export default function RootLayout({
@@ -33,6 +31,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        {/* ── Prevent FOUC — apply dark class before React hydrates ── */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = JSON.parse(localStorage.getItem('bord-theme') || '{}');
+                if (theme.state && theme.state.theme === 'dark') {
+                  document.documentElement.classList.add('dark');
+                }
+              } catch(e) {}
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         {children}
       </body>

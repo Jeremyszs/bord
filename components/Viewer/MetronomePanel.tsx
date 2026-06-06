@@ -28,26 +28,19 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
   const handleTap = () => {
     const now = performance.now();
     const tapTimes = tapTimesRef.current;
-    
-    // If it's been more than 2 seconds since the last tap, reset the array
     if (tapTimes.length > 0 && now - tapTimes[tapTimes.length - 1] > 2000) {
       tapTimes.length = 0;
     }
-    
     tapTimes.push(now);
-    
-    // Keep only the last 4 taps to average
     if (tapTimes.length > 4) {
       tapTimes.shift();
     }
-    
     if (tapTimes.length >= 2) {
       let totalInterval = 0;
       for (let i = 1; i < tapTimes.length; i++) {
         totalInterval += (tapTimes[i] - tapTimes[i - 1]);
       }
       const averageInterval = totalInterval / (tapTimes.length - 1);
-      
       const calculatedBpm = Math.round(60000 / averageInterval);
       setBpm(Math.max(40, Math.min(250, calculatedBpm)));
     }
@@ -60,19 +53,26 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
           initial={{ opacity: 0, y: 8, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 8, scale: 0.95 }}
-          className="w-full max-w-sm bg-white/90 backdrop-blur-md border border-gray-100 rounded-2xl shadow-xl p-4 mb-2"
-          style={{ touchAction: 'manipulation' }}
+          className="w-full max-w-sm backdrop-blur-md border rounded-2xl shadow-xl p-4 mb-2"
+          style={{
+            backgroundColor: 'var(--bg-overlay)',
+            borderColor: 'var(--border-subtle)',
+          }}
         >
           <div className="flex items-center justify-between mb-4">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Metronome
             </span>
             <div className="flex items-center gap-3">
-              {/* Time Signature Dropdown */}
               <select
                 value={`${timeSignature.beatsPerBar}/${timeSignature.beatValue}`}
                 onChange={handleTimeSigChange}
-                className="bg-gray-100 text-xs font-bold text-gray-700 rounded-lg px-2 py-1 outline-none appearance-none cursor-pointer border border-transparent hover:border-gray-200"
+                className="text-xs font-bold rounded-lg px-2 py-1 outline-none appearance-none cursor-pointer border transition-colors"
+                style={{
+                  backgroundColor: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'transparent',
+                }}
               >
                 <option value="2/4">2/4</option>
                 <option value="3/4">3/4</option>
@@ -80,21 +80,22 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
                 <option value="6/8">6/8</option>
               </select>
 
-              <span className="text-sm font-black text-[#007AFF] w-12 text-right">
-                {bpm} <span className="text-[10px] font-semibold text-gray-400">BPM</span>
+              <span className="text-sm font-black w-12 text-right" style={{ color: 'var(--accent)' }}>
+                {bpm} <span className="text-[10px] font-semibold" style={{ color: 'var(--text-muted)' }}>BPM</span>
               </span>
             </div>
           </div>
 
-          {/* Controls Row */}
           <div className="flex items-center gap-3 mb-5">
             <button
               onClick={togglePlay}
-              className={`flex items-center justify-center w-12 h-12 rounded-full shrink-0 transition-colors ${
-                isPlaying
-                  ? 'bg-[#007AFF] text-white shadow-[0_4px_12px_rgba(0,122,255,0.3)]'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              } active:scale-90`}
+              className={`flex items-center justify-center w-12 h-12 rounded-full shrink-0 active:scale-90`}
+              style={{
+                backgroundColor: isPlaying ? 'var(--accent)' : 'var(--btn-bg)',
+                color: isPlaying ? 'white' : 'var(--btn-text)',
+                border: isPlaying ? 'none' : '1px solid var(--btn-border)',
+                boxShadow: isPlaying ? '0 4px 12px var(--accent-glow)' : 'none',
+              }}
             >
               {isPlaying ? <Pause size={20} /> : <Play size={20} className="ml-1" />}
             </button>
@@ -103,7 +104,12 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
             </div>
             <button
               onClick={handleTap}
-              className="flex items-center justify-center h-10 px-3.5 rounded-xl bg-gray-100 text-gray-700 font-bold text-[10px] uppercase tracking-widest hover:bg-gray-200 active:bg-gray-300 active:scale-95 shrink-0 transition-all border border-gray-200"
+              className="flex items-center justify-center h-10 px-3.5 rounded-xl font-bold text-[10px] uppercase tracking-widest active:scale-95 shrink-0 transition-all border"
+              style={{
+                backgroundColor: 'var(--btn-bg)',
+                color: 'var(--btn-text)',
+                borderColor: 'var(--btn-border)',
+              }}
             >
               Tap
             </button>
@@ -118,8 +124,8 @@ export default function MetronomePanel({ isVisible }: { isVisible: boolean }) {
                   key={i}
                   className="w-2.5 h-2.5 rounded-full transition-none"
                   style={{
-                    backgroundColor: isActive ? '#007AFF' : '#E5E7EB',
-                    boxShadow: isActive ? '0 0 8px rgba(0,122,255,0.6)' : 'none',
+                    backgroundColor: isActive ? 'var(--accent)' : 'var(--border-subtle)',
+                    boxShadow: isActive ? '0 0 8px var(--accent-glow)' : 'none',
                   }}
                 />
               );

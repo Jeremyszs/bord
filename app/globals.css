@@ -1,19 +1,177 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #ffffff;
-  --foreground: #000000;
+  /* ── Semantic tokens (light) ── */
+  --bg-page: #f5f9ff;
+  --bg-card: #ffffff;
+  --bg-elevated: #f8f9fa;
+  --bg-overlay: rgba(255, 255, 255, 0.80);
+
+  --text-primary: #000000;
+  --text-secondary: #6b7280;
+  --text-muted: #9ca3af;
+  --text-on-accent: #ffffff;
+
+  --border-subtle: #e5e7eb;
+  --border-card: #f3f4f6;
+
+  --accent: #007aff;
+  --accent-dim: #bfdbfe;
+  --accent-glow: rgba(0, 122, 255, 0.40);
+  --accent-bg: rgba(0, 122, 255, 0.08);
+
+  --red: #ef4444;
+  --red-bg: #fef2f2;
+  --red-border: #fecaca;
+
+  --green: #22c55e;
+  --green-bg: #f0fdf4;
+
+  --amber-bg: #fffbeb;
+  --amber-border: #fde68a;
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.10);
+
+  --btn-bg: #ffffff;
+  --btn-border: #e5e7eb;
+  --btn-text: #374151;
+  --btn-hover-border: #d1d5db;
+
+  --piano-white: #ffffff;
+  --piano-black: #1c1c1e;
+
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb: #d1d5db;
+
+  --toast-bg: #111827;
+  --toast-text: #ffffff;
+}
+
+.dark {
+  --bg-page: #0a0e1a;
+  --bg-card: #131826;
+  --bg-elevated: #1a2035;
+  --bg-overlay: rgba(10, 14, 26, 0.85);
+
+  --text-primary: #e8edf5;
+  --text-secondary: #8896b6;
+  --text-muted: #4a5678;
+  --text-on-accent: #ffffff;
+
+  --border-subtle: #1e2844;
+  --border-card: #1a2035;
+
+  --accent: #5b9fff;
+  --accent-dim: #3b5f8f;
+  --accent-glow: rgba(91, 159, 255, 0.35);
+  --accent-bg: rgba(91, 159, 255, 0.12);
+
+  --red: #f87171;
+  --red-bg: rgba(248, 113, 113, 0.12);
+  --red-border: rgba(248, 113, 113, 0.25);
+
+  --green: #34d399;
+  --green-bg: rgba(52, 211, 153, 0.12);
+
+  --amber-bg: rgba(251, 191, 36, 0.12);
+  --amber-border: rgba(251, 191, 36, 0.25);
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.30);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.40);
+
+  --btn-bg: #1a2035;
+  --btn-border: #1e2844;
+  --btn-text: #c8d0e0;
+  --btn-hover-border: #2a3855;
+
+  --piano-white: #1a2035;
+  --piano-black: #0a0e1a;
+
+  --scrollbar-bg: transparent;
+  --scrollbar-thumb: #2a3855;
+
+  --toast-bg: #1a2035;
+  --toast-text: #e8edf5;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-page);
+  --color-foreground: var(--text-primary);
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg-page);
+  color: var(--text-primary);
   font-family: var(--font-sans);
+}
+
+/* ── Scrollbar styling ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+/* ── Shared utility classes ── */
+
+/* Card with adaptive background */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
+}
+
+/* Ghost button (icon toolbar buttons) */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-bg);
+  border: 1px solid var(--btn-border);
+  color: var(--btn-text);
+  transition: all 0.15s ease;
+}
+.btn-ghost:hover {
+  border-color: var(--btn-hover-border);
+  color: var(--accent);
+}
+.btn-ghost:active {
+  transform: scale(0.9);
+}
+
+/* Active/toggled button */
+.btn-active {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--text-on-accent);
+  box-shadow: 0 4px 12px var(--accent-glow);
+  transition: all 0.15s ease;
+}
+.btn-active:active {
+  transform: scale(0.9);
+}
+
+/* Toast notification */
+.toast {
+  background: var(--toast-bg);
+  color: var(--toast-text);
+}
+
+/* Range slider */
+input[type='range'] {
+  accent-color: var(--accent);
 }
